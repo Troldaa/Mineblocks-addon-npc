@@ -1,0 +1,40 @@
+plugins {
+    id 'java'
+    id "com.github.johnrengelman.shadow" version "8.1.1"
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+group 'cz.raixo.mobs'
+version '1.0.0'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven { url = 'https://jitpack.io' }
+    maven { url = "https://repo.papermc.io/repository/maven-public/" }
+    maven { url = "https://repo.codemc.io/repository/maven-public/" }
+    maven { url = "https://repo.aikar.co/content/groups/aikar/" }
+    maven { url = "https://repo.minebench.de/" }
+}
+
+dependencies {
+    compileOnly 'org.spigotmc:spigot-api:1.20.1-R0.1-SNAPSHOT'
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+
+    implementation project(':MineBlocks')
+
+    implementation 'net.kyori:adventure-platform-bukkit:4.2.0'
+    implementation "co.aikar:acf-bukkit:0.5.1-SNAPSHOT"
+    implementation 'de.themoep:minedown-adventure:1.7.1-SNAPSHOT'
+}
+
+shadowJar {
+    archiveFileName = "MineMobs-${project.version}.jar"
+    relocate 'co.aikar.commands', 'cz.raixo.mobs.libs.acf'
+    relocate 'co.aikar.locales', 'cz.raixo.mobs.libs.acf.locales'
+}

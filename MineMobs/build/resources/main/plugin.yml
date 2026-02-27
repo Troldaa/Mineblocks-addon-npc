@@ -1,0 +1,6 @@
+name: MineMobs
+version: 1.0.0
+main: cz.raixo.mobs.MineMobsPlugin
+author: RAIXOCZ
+api-version: 1.16
+depend: [MineBlocks]

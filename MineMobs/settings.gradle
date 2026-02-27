@@ -1,0 +1,3 @@
+rootProject.name = 'MineMobs'
+include 'MineBlocks'
+project(':MineBlocks').projectDir = new File(settingsDir, '../MineBlocks')
