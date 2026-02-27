@@ -42,7 +42,7 @@ public class MMCommand extends BaseCommand {
         mob.setType(type);
         mob.setLocation(player.getLocation());
         mob.setHealth(new BlockHealth(null, 10)); // Default 10 health
-        mob.setRewards(new BlockRewards(null, new LinkedList<>(), new LinkedList<>()));
+        mob.setRewards(new BlockRewards(plugin.getMineBlocks(), null, new LinkedList<>(), new LinkedList<>()));
         mob.setMessages(new BlockMessages("&aMob %player% was defeated!"));
 
         plugin.getMobRegistry().register(mob);

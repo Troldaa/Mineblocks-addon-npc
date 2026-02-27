@@ -83,7 +83,7 @@ public class MineMob {
     }
 
     private Runnable onDeath(Player player) {
-        Runnable runnable = rewards.giveLastRewards(player.getUniqueId());
+        Runnable runnable = rewards.giveLastRewards(player.getUniqueId(), playerDataMap);
         broadcast(messages.getBreakMessage(), player);
         reset();
         return runnable;
@@ -100,7 +100,7 @@ public class MineMob {
         if (message == null || message.isEmpty()) return;
         String coloredMessage = Colors.colorize(message.replace("%player%", attacker.getName()));
         for (Player p : plugin.getServer().getOnlinePlayers()) {
-            p.sendMessage(coloredMessage);
+            p.sendMessage(plugin.getMineBlocks().getIntegrationManager().setPlaceholders(p, coloredMessage));
         }
     }
 }

@@ -46,7 +46,7 @@ public class MobConfig {
             mob.setType(EntityType.valueOf(mobSection.getString("type", "ZOMBIE")));
             mob.setLocation(mobSection.getLocation("location"));
             mob.setHealth(new BlockHealth(null, mobSection.getInt("health", 10)));
-            mob.setRewards(new BlockRewards(null, new LinkedList<>(), new LinkedList<>())); // Basic implementation
+            mob.setRewards(new BlockRewards(plugin.getMineBlocks(), null, new LinkedList<>(), new LinkedList<>())); // Basic implementation
             mob.setMessages(new BlockMessages(mobSection.getString("break-message", "&aMob %player% was defeated!")));
             mob.setPermission(mobSection.getString("permission"));
 
