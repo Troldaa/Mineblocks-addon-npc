@@ -340,13 +340,32 @@ public class MineMob {
         }
     }
 
+    private String formatTime(int totalSeconds) {
+        int hours = totalSeconds / 3600;
+        int minutes = (totalSeconds % 3600) / 60;
+        int seconds = totalSeconds % 60;
+
+        String format;
+        if (hours > 0) {
+            format = plugin.getConfig().getString("time-format.hours", "%h hours %m minutes %s seconds");
+        } else if (minutes > 0) {
+            format = plugin.getConfig().getString("time-format.minutes", "%m minutes %s seconds");
+        } else {
+            format = plugin.getConfig().getString("time-format.seconds", "%s seconds");
+        }
+
+        return format.replace("%h", String.valueOf(hours))
+                     .replace("%m", String.valueOf(minutes))
+                     .replace("%s", String.valueOf(seconds));
+    }
+
     private String replacePlaceholders(String line) {
         line = line.replace("%name%", id)
                    .replace("%health%", String.valueOf(health.getHealth()))
                    .replace("%max_health%", String.valueOf(health.getMaxHealth()));
 
         if (isCoolingDown) {
-            line = line.replace("%cooldown%", String.valueOf(remainingCooldown));
+            line = line.replace("%cooldown%", formatTime(remainingCooldown));
         } else {
             line = line.replace("%cooldown%", "");
         }

@@ -23,6 +23,7 @@ public class MineMobsPlugin extends JavaPlugin {
 
         mineBlocks = (MineBlocksPlugin) Bukkit.getPluginManager().getPlugin("MineBlocks");
         mobRegistry = new MobRegistry();
+        saveDefaultConfig();
         mobConfig = new MobConfig(this);
 
         commandManager = new BukkitCommandManager(this);
@@ -36,6 +37,7 @@ public class MineMobsPlugin extends JavaPlugin {
     }
 
     public void reload() {
+        reloadConfig();
         if (mobRegistry != null) {
             mobRegistry.getMobs().forEach(MineMob::remove);
         }

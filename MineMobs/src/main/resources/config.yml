@@ -1,0 +1,6 @@
+# MineMobs General Configuration
+
+time-format:
+  hours: "%h hours %m minutes %s seconds"
+  minutes: "%m minutes %s seconds"
+  seconds: "%s seconds"
