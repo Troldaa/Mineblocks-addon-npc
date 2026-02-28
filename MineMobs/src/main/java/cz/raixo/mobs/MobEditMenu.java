@@ -1,21 +1,20 @@
 package cz.raixo.mobs;
 
 import cz.raixo.blocks.gui.filler.map.MapGuiFiller;
-import cz.raixo.blocks.gui.item.GuiItem;
 import cz.raixo.blocks.gui.item.GuiItemBuilder;
 import cz.raixo.blocks.gui.item.render.Renderer;
 import cz.raixo.blocks.gui.itemstack.ItemStackBuilder;
 import cz.raixo.blocks.gui.meta.GuiMeta;
 import cz.raixo.blocks.gui.type.InventoryType;
+import cz.raixo.blocks.util.NumberUtil;
 import cz.raixo.blocks.util.color.Colors;
 import de.themoep.minedown.adventure.MineDown;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
-import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 public class MobEditMenu {
     private final MineMob mob;
@@ -50,12 +49,54 @@ public class MobEditMenu {
         filler.setItem('1', new GuiItemBuilder<>(filler, ItemStackBuilder.create(Material.APPLE)
                 .withName(MineDown.parse("&cHealth: " + mob.getHealth().getMaxHealth()))
                 .withLore(List.of(Component.text("Click to edit health")))
-                .build()).build());
+                .build())
+                .withClickHandler(e -> {
+                    player.closeInventory();
+                    Colors.send(player, "&bEnter new health in chat:");
+                    plugin.getMineBlocks().getEditValuesListener().awaitChatInput(player)
+                            .exceptionally(t -> {
+                                if (t instanceof TimeoutException) Colors.send(player, "&cTimeout!");
+                                return null;
+                            })
+                            .thenAccept(s -> cz.raixo.blocks.gui.Gui.runSync(() -> {
+                                open(player);
+                                if (s == null) return;
+                                NumberUtil.parseInt(s).ifPresent(i -> {
+                                    mob.getHealth().setMaxHealth(i);
+                                    plugin.getMobConfig().saveMobs();
+                                });
+                            }));
+                }).build());
+
+        // Glowing Red
+        filler.setItem('G', new GuiItemBuilder<>(filler, (Renderer<Boolean>) (slot, state) -> ItemStackBuilder.create(Material.RED_DYE)
+                .withName(MineDown.parse("&cGlowing Red: " + (state ? "&2ON" : "&4OFF")))
+                .build())
+                .withDefaultState(mob.isGlowingRed())
+                .withClickHandler(e -> {
+                    mob.setGlowingRed(!mob.isGlowingRed());
+                    e.getGuiItem().setState(mob.isGlowingRed());
+                    plugin.getMobConfig().saveMobs();
+                }).build());
 
         // Cooldown
         filler.setItem('2', new GuiItemBuilder<>(filler, ItemStackBuilder.create(Material.CLOCK)
                 .withName(MineDown.parse("&eCooldown: " + mob.getCooldownSeconds() + "s"))
-                .build()).build());
+                .build())
+                .withClickHandler(e -> {
+                    player.closeInventory();
+                    Colors.send(player, "&bEnter new cooldown in seconds:");
+                    plugin.getMineBlocks().getEditValuesListener().awaitChatInput(player)
+                            .exceptionally(t -> null)
+                            .thenAccept(s -> cz.raixo.blocks.gui.Gui.runSync(() -> {
+                                open(player);
+                                if (s == null) return;
+                                NumberUtil.parseInt(s).ifPresent(i -> {
+                                    mob.setCooldownSeconds(i);
+                                    plugin.getMobConfig().saveMobs();
+                                });
+                            }));
+                }).build());
 
         // Launch Mode
         filler.setItem('L', new GuiItemBuilder<>(filler, (Renderer<Boolean>) (slot, state) -> ItemStackBuilder.create(Material.SLIME_BALL)
@@ -77,6 +118,39 @@ public class MobEditMenu {
                     mob.setTntCannonEffect(!mob.isTntCannonEffect());
                     e.getGuiItem().setState(mob.isTntCannonEffect());
                     plugin.getMobConfig().saveMobs();
+                }).build());
+
+        // Launch Range
+        filler.setItem('R', new GuiItemBuilder<>(filler, ItemStackBuilder.create(Material.FISHING_ROD)
+                .withName(MineDown.parse("&bLaunch Range: " + mob.getLaunchRange()))
+                .build())
+                .withClickHandler(e -> {
+                    player.closeInventory();
+                    Colors.send(player, "&bEnter new launch range:");
+                    plugin.getMineBlocks().getEditValuesListener().awaitChatInput(player)
+                            .thenAccept(s -> cz.raixo.blocks.gui.Gui.runSync(() -> {
+                                open(player);
+                                if (s == null) return;
+                                try { mob.setLaunchRange(Double.parseDouble(s)); plugin.getMobConfig().saveMobs(); } catch (Exception ignored) {}
+                            }));
+                }).build());
+
+        // Firework Height
+        filler.setItem('F', new GuiItemBuilder<>(filler, ItemStackBuilder.create(Material.FIREWORK_ROCKET)
+                .withName(MineDown.parse("&bFirework Height: " + mob.getFireworkHeight()))
+                .build())
+                .withClickHandler(e -> {
+                    player.closeInventory();
+                    Colors.send(player, "&bEnter firework height:");
+                    plugin.getMineBlocks().getEditValuesListener().awaitChatInput(player)
+                            .thenAccept(s -> cz.raixo.blocks.gui.Gui.runSync(() -> {
+                                open(player);
+                                if (s == null) return;
+                                NumberUtil.parseInt(s).ifPresent(i -> {
+                                    mob.setFireworkHeight(i);
+                                    plugin.getMobConfig().saveMobs();
+                                });
+                            }));
                 }).build());
 
         // Close

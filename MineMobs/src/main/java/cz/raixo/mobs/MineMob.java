@@ -17,6 +17,7 @@ import org.bukkit.*;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.scoreboard.Team;
 import org.bukkit.util.Vector;
 
 import java.util.*;
@@ -147,8 +148,7 @@ public class MineMob {
         if (spawnedEntity instanceof LivingEntity) {
             spawnedEntity.setGlowing(true);
             if (glowingRed) {
-                // Team based glowing would be needed for red, but for simplicity we'll just set it to true.
-                // In Spigot API we can't easily change glow color without scoreboard teams.
+                setRedGlow(spawnedEntity);
             }
         }
         updateHologram();
@@ -158,11 +158,29 @@ public class MineMob {
             remainingCooldown = 0;
             if (spawnedEntity != null) {
                 spawnedEntity.setGlowing(false);
+                clearGlow(spawnedEntity);
             }
             reset();
         }, cooldownSeconds * 20L);
 
         return runnable;
+    }
+
+    private void setRedGlow(Entity entity) {
+        String teamName = "minemob_red";
+        Team team = Bukkit.getScoreboardManager().getMainScoreboard().getTeam(teamName);
+        if (team == null) {
+            team = Bukkit.getScoreboardManager().getMainScoreboard().registerNewTeam(teamName);
+            team.setColor(ChatColor.RED);
+        }
+        team.addEntry(entity.getUniqueId().toString());
+    }
+
+    private void clearGlow(Entity entity) {
+        Team team = Bukkit.getScoreboardManager().getMainScoreboard().getTeam("minemob_red");
+        if (team != null) {
+            team.removeEntry(entity.getUniqueId().toString());
+        }
     }
 
     private void spawnFirework() {
