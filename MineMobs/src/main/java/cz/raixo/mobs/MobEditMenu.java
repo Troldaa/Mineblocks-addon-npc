@@ -26,27 +26,21 @@ public class MobEditMenu {
     }
 
     public void open(Player player) {
-        // Since I cannot easily extend BlockMenu due to generic constraints and project structure,
-        // I will implement a simpler version or try to use MineBlocks' Gui system.
-
-        // Actually, let's try to use the raw Gui class from MineBlocks if possible.
-        // But for now, a simple chest menu for speed.
-
-        // REVISION: I'll use the existing MineBlocks GUI framework.
         MapGuiFiller filler = new MapGuiFiller(
-                "1 2 3 4 5",
                 "         ",
-                " L R S F ",
-                " T G C   ",
+                " a b c d ",
+                "  e f g  ",
+                " h i j k ",
                 "         ",
-                "    X    "
+                "    x    "
         );
 
         GuiMeta<MapGuiFiller> meta = new GuiMeta<>(filler, Component.text("Edit Mob: " + mob.getId()), InventoryType.CHEST_6);
         cz.raixo.blocks.gui.Gui<MapGuiFiller> gui = new cz.raixo.blocks.gui.Gui<>(meta);
+        filler = gui.getFiller();
 
         // Health
-        filler.setItem('1', new GuiItemBuilder<>(filler, ItemStackBuilder.create(Material.APPLE)
+        filler.setItem('a', new GuiItemBuilder<>(filler, ItemStackBuilder.create(Material.APPLE)
                 .withName(MineDown.parse("&cHealth: " + mob.getHealth().getMaxHealth()))
                 .withLore(List.of(Component.text("Click to edit health")))
                 .build())
@@ -68,37 +62,8 @@ public class MobEditMenu {
                             }));
                 }).build());
 
-        // Regeneration
-        filler.setItem('S', new GuiItemBuilder<>(filler, ItemStackBuilder.create(Material.POTION)
-                .withName(MineDown.parse("&aRegen Idle: " + mob.getRegenerationIdleSeconds() + "s"))
-                .build())
-                .withClickHandler(e -> {
-                    player.closeInventory();
-                    Colors.send(player, "&bEnter new regen idle seconds:");
-                    plugin.getMineBlocks().getEditValuesListener().awaitChatInput(player)
-                            .thenAccept(s -> cz.raixo.blocks.gui.Gui.runSync(() -> {
-                                open(player);
-                                if (s == null) return;
-                                NumberUtil.parseInt(s).ifPresent(i -> {
-                                    mob.setRegenerationIdleSeconds(i);
-                                    plugin.getMobConfig().saveMobs();
-                                });
-                            }));
-                }).build());
-
-        // Glowing Red
-        filler.setItem('G', new GuiItemBuilder<>(filler, (Renderer<Boolean>) (slot, state) -> ItemStackBuilder.create(Material.RED_DYE)
-                .withName(MineDown.parse("&cGlowing Red: " + (state ? "&2ON" : "&4OFF")))
-                .build())
-                .withDefaultState(mob.isGlowingRed())
-                .withClickHandler(e -> {
-                    mob.setGlowingRed(!mob.isGlowingRed());
-                    e.getGuiItem().setState(mob.isGlowingRed());
-                    plugin.getMobConfig().saveMobs();
-                }).build());
-
         // Cooldown
-        filler.setItem('2', new GuiItemBuilder<>(filler, ItemStackBuilder.create(Material.CLOCK)
+        filler.setItem('b', new GuiItemBuilder<>(filler, ItemStackBuilder.create(Material.CLOCK)
                 .withName(MineDown.parse("&eCooldown: " + mob.getCooldownSeconds() + "s"))
                 .build())
                 .withClickHandler(e -> {
@@ -116,8 +81,26 @@ public class MobEditMenu {
                             }));
                 }).build());
 
+        // Regeneration
+        filler.setItem('c', new GuiItemBuilder<>(filler, ItemStackBuilder.create(Material.POTION)
+                .withName(MineDown.parse("&aRegen Idle: " + mob.getRegenerationIdleSeconds() + "s"))
+                .build())
+                .withClickHandler(e -> {
+                    player.closeInventory();
+                    Colors.send(player, "&bEnter new regen idle seconds:");
+                    plugin.getMineBlocks().getEditValuesListener().awaitChatInput(player)
+                            .thenAccept(s -> cz.raixo.blocks.gui.Gui.runSync(() -> {
+                                open(player);
+                                if (s == null) return;
+                                NumberUtil.parseInt(s).ifPresent(i -> {
+                                    mob.setRegenerationIdleSeconds(i);
+                                    plugin.getMobConfig().saveMobs();
+                                });
+                            }));
+                }).build());
+
         // Launch Mode
-        filler.setItem('L', new GuiItemBuilder<>(filler, (Renderer<Boolean>) (slot, state) -> ItemStackBuilder.create(Material.SLIME_BALL)
+        filler.setItem('d', new GuiItemBuilder<>(filler, (Renderer<Boolean>) (slot, state) -> ItemStackBuilder.create(Material.SLIME_BALL)
                 .withName(MineDown.parse("&aLaunch Mode: " + (state ? "&2ON" : "&4OFF")))
                 .build())
                 .withDefaultState(mob.isLaunchMode())
@@ -128,7 +111,7 @@ public class MobEditMenu {
                 }).build());
 
         // TNT Cannon
-        filler.setItem('T', new GuiItemBuilder<>(filler, (Renderer<Boolean>) (slot, state) -> ItemStackBuilder.create(Material.TNT)
+        filler.setItem('e', new GuiItemBuilder<>(filler, (Renderer<Boolean>) (slot, state) -> ItemStackBuilder.create(Material.TNT)
                 .withName(MineDown.parse("&cTNT Effect: " + (state ? "&2ON" : "&4OFF")))
                 .build())
                 .withDefaultState(mob.isTntCannonEffect())
@@ -139,7 +122,7 @@ public class MobEditMenu {
                 }).build());
 
         // Launch Range
-        filler.setItem('R', new GuiItemBuilder<>(filler, ItemStackBuilder.create(Material.FISHING_ROD)
+        filler.setItem('f', new GuiItemBuilder<>(filler, ItemStackBuilder.create(Material.FISHING_ROD)
                 .withName(MineDown.parse("&bLaunch Range: " + mob.getLaunchRange()))
                 .build())
                 .withClickHandler(e -> {
@@ -154,7 +137,7 @@ public class MobEditMenu {
                 }).build());
 
         // Firework Height
-        filler.setItem('F', new GuiItemBuilder<>(filler, ItemStackBuilder.create(Material.FIREWORK_ROCKET)
+        filler.setItem('g', new GuiItemBuilder<>(filler, ItemStackBuilder.create(Material.FIREWORK_ROCKET)
                 .withName(MineDown.parse("&bFirework Height: " + mob.getFireworkHeight()))
                 .build())
                 .withClickHandler(e -> {
@@ -171,14 +154,19 @@ public class MobEditMenu {
                             }));
                 }).build());
 
-        // Close
-        filler.setItem('X', new GuiItemBuilder<>(filler, ItemStackBuilder.create(Material.BARRIER)
-                .withName(MineDown.parse("&cClose"))
+        // Glowing Red
+        filler.setItem('h', new GuiItemBuilder<>(filler, (Renderer<Boolean>) (slot, state) -> ItemStackBuilder.create(Material.RED_DYE)
+                .withName(MineDown.parse("&cGlowing Red: " + (state ? "&2ON" : "&4OFF")))
                 .build())
-                .withClickHandler(e -> player.closeInventory()).build());
+                .withDefaultState(mob.isGlowingRed())
+                .withClickHandler(e -> {
+                    mob.setGlowingRed(!mob.isGlowingRed());
+                    e.getGuiItem().setState(mob.isGlowingRed());
+                    plugin.getMobConfig().saveMobs();
+                }).build());
 
-        // Type Select (simple swap for testing/example)
-        filler.setItem('3', new GuiItemBuilder<>(filler, ItemStackBuilder.create(Material.SPAWNER)
+        // Type Select
+        filler.setItem('i', new GuiItemBuilder<>(filler, ItemStackBuilder.create(Material.SPAWNER)
                 .withName(MineDown.parse("&bType: " + mob.getType().name()))
                 .build())
                 .withClickHandler(e -> {
@@ -190,10 +178,38 @@ public class MobEditMenu {
                                 if (s == null) return;
                                 try {
                                     mob.setType(org.bukkit.entity.EntityType.valueOf(s.toUpperCase()));
-                                    mob.spawn(); // Re-spawn to update type
+                                    mob.spawn();
                                     plugin.getMobConfig().saveMobs();
                                 } catch (Exception ignored) {}
                             }));
+                }).build());
+
+        // Close
+        filler.setItem('x', new GuiItemBuilder<>(filler, ItemStackBuilder.create(Material.BARRIER)
+                .withName(MineDown.parse("&cClose"))
+                .build())
+                .withClickHandler(e -> player.closeInventory()).build());
+
+        // Delete Mob
+        filler.setItem('k', new GuiItemBuilder<>(filler, (Renderer<Boolean>) (slot, state) -> {
+            if (Boolean.TRUE.equals(state)) {
+                return ItemStackBuilder.create(Material.RED_TERRACOTTA)
+                        .withName(MineDown.parse("&c&lCONFIRM DELETE"))
+                        .build();
+            }
+            return ItemStackBuilder.create(Material.LAVA_BUCKET)
+                    .withName(MineDown.parse("&4&lDELETE MOB"))
+                    .build();
+        })
+                .withDefaultState(false)
+                .withClickHandler(e -> {
+                    if (Boolean.TRUE.equals(e.getGuiItem().getState())) {
+                        plugin.getMobRegistry().unregister(mob);
+                        player.closeInventory();
+                        Colors.send(player, "&cMob deleted.");
+                    } else {
+                        e.getGuiItem().setState(true);
+                    }
                 }).build());
 
         gui.open(player);
