@@ -68,6 +68,24 @@ public class MobEditMenu {
                             }));
                 }).build());
 
+        // Regeneration
+        filler.setItem('S', new GuiItemBuilder<>(filler, ItemStackBuilder.create(Material.POTION)
+                .withName(MineDown.parse("&aRegen Idle: " + mob.getRegenerationIdleSeconds() + "s"))
+                .build())
+                .withClickHandler(e -> {
+                    player.closeInventory();
+                    Colors.send(player, "&bEnter new regen idle seconds:");
+                    plugin.getMineBlocks().getEditValuesListener().awaitChatInput(player)
+                            .thenAccept(s -> cz.raixo.blocks.gui.Gui.runSync(() -> {
+                                open(player);
+                                if (s == null) return;
+                                NumberUtil.parseInt(s).ifPresent(i -> {
+                                    mob.setRegenerationIdleSeconds(i);
+                                    plugin.getMobConfig().saveMobs();
+                                });
+                            }));
+                }).build());
+
         // Glowing Red
         filler.setItem('G', new GuiItemBuilder<>(filler, (Renderer<Boolean>) (slot, state) -> ItemStackBuilder.create(Material.RED_DYE)
                 .withName(MineDown.parse("&cGlowing Red: " + (state ? "&2ON" : "&4OFF")))
@@ -158,6 +176,25 @@ public class MobEditMenu {
                 .withName(MineDown.parse("&cClose"))
                 .build())
                 .withClickHandler(e -> player.closeInventory()).build());
+
+        // Type Select (simple swap for testing/example)
+        filler.setItem('3', new GuiItemBuilder<>(filler, ItemStackBuilder.create(Material.SPAWNER)
+                .withName(MineDown.parse("&bType: " + mob.getType().name()))
+                .build())
+                .withClickHandler(e -> {
+                    player.closeInventory();
+                    Colors.send(player, "&bEnter new EntityType name:");
+                    plugin.getMineBlocks().getEditValuesListener().awaitChatInput(player)
+                            .thenAccept(s -> cz.raixo.blocks.gui.Gui.runSync(() -> {
+                                open(player);
+                                if (s == null) return;
+                                try {
+                                    mob.setType(org.bukkit.entity.EntityType.valueOf(s.toUpperCase()));
+                                    mob.spawn(); // Re-spawn to update type
+                                    plugin.getMobConfig().saveMobs();
+                                } catch (Exception ignored) {}
+                            }));
+                }).build());
 
         gui.open(player);
     }

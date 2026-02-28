@@ -249,6 +249,7 @@ public class MineMob {
         if (hologram == null) return;
         List<String> lines = new ArrayList<>();
         for (String line : hologramLines) {
+            if (!isCoolingDown && line.contains("%cooldown%")) continue;
             lines.add(replacePlaceholders(line));
         }
         hologram.setLines(lines);
