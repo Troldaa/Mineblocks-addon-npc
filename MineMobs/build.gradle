@@ -29,18 +29,13 @@ dependencies {
 
     compileOnly project(':MineBlocks')
 
-    implementation 'net.kyori:adventure-platform-bukkit:4.2.0'
-    implementation "co.aikar:acf-bukkit:0.5.1-SNAPSHOT"
-    implementation 'de.themoep:minedown-adventure:1.7.1-SNAPSHOT'
+    compileOnly 'net.kyori:adventure-platform-bukkit:4.2.0'
+    compileOnly "co.aikar:acf-bukkit:0.5.1-SNAPSHOT"
+    compileOnly 'de.themoep:minedown-adventure:1.7.1-SNAPSHOT'
 }
 
 shadowJar {
     archiveFileName = "MineMobs-${project.version}.jar"
-    relocate 'co.aikar.commands', 'cz.raixo.blocks.libs.acf'
-    relocate 'co.aikar.locales', 'cz.raixo.blocks.libs.acf.locales'
-    relocate 'de.themoep.minedown', 'cz.raixo.blocks.libs.minedown'
-    relocate 'net.kyori.adventure', 'cz.raixo.blocks.libs.adventure'
-    relocate 'net.kyori.examination', 'cz.raixo.blocks.libs.adventure.examination'
 
     dependencies {
         exclude(project(':MineBlocks'))
