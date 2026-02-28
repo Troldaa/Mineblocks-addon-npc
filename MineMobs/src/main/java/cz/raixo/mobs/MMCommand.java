@@ -2,6 +2,7 @@ package cz.raixo.mobs;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.*;
+import cz.raixo.blocks.commands.MBCommand;
 import cz.raixo.blocks.block.health.BlockHealth;
 import cz.raixo.blocks.block.messages.BlockMessages;
 import cz.raixo.blocks.block.rewards.BlockRewards;
@@ -72,7 +73,7 @@ public class MMCommand extends BaseCommand {
                 cz.raixo.blocks.block.rewards.commands.RewardCommands.parse("RANDOM", List.of("100;say %player% is third!"))
         ));
 
-        mob.setRewards(new BlockRewards(plugin.getMineBlocks(), null, new LinkedList<>(), exampleRewards));
+        mob.setRewards(new BlockRewards(plugin.getMineBlocks(), new LinkedList<>(), exampleRewards));
         mob.setMessages(new BlockMessages("&aMob %player% was defeated!"));
         mob.setHologramLines(new LinkedList<>(List.of(
                 "&b&l%name%",
@@ -128,6 +129,79 @@ public class MMCommand extends BaseCommand {
         }
 
         new MobEditMenu(mob).open(player);
+    }
+
+    @Subcommand("hologram show")
+    @Syntax("<id>")
+    @CommandCompletion("@mobids")
+    public void showHologram(Player player, String id) {
+        MineMob mob = plugin.getMobRegistry().getById(id);
+        if (mob == null) {
+            player.sendMessage(Colors.colorize("&cMob with that ID does not exist!"));
+            return;
+        }
+
+        MBCommand.showHologram(plugin.getMineBlocks().getBukkitAudiences().player(player), "mm", mob.getId(), mob.getHologramLines());
+    }
+
+    @Subcommand("hologram setline")
+    @Syntax("<id> <line number> <text>")
+    @CommandCompletion("@mobids")
+    public void setHologramLine(Player player, String id, int line, String text) {
+        MineMob mob = plugin.getMobRegistry().getById(id);
+        if (mob == null) {
+            player.sendMessage(Colors.colorize("&cMob with that ID does not exist!"));
+            return;
+        }
+
+        List<String> lines = mob.getHologramLines();
+        if (line < 1 || line > lines.size()) {
+            player.sendMessage(Colors.colorize("&cInvalid line number!"));
+            return;
+        }
+
+        lines.set(line - 1, text);
+        mob.updateHologram();
+        plugin.getMobConfig().saveMobs();
+        MBCommand.showHologram(plugin.getMineBlocks().getBukkitAudiences().player(player), "mm", mob.getId(), mob.getHologramLines());
+    }
+
+    @Subcommand("hologram removeline")
+    @Syntax("<id> <line number>")
+    @CommandCompletion("@mobids")
+    public void removeHologramLine(Player player, String id, int line) {
+        MineMob mob = plugin.getMobRegistry().getById(id);
+        if (mob == null) {
+            player.sendMessage(Colors.colorize("&cMob with that ID does not exist!"));
+            return;
+        }
+
+        List<String> lines = mob.getHologramLines();
+        if (line < 1 || line > lines.size()) {
+            player.sendMessage(Colors.colorize("&cInvalid line number!"));
+            return;
+        }
+
+        lines.remove(line - 1);
+        mob.updateHologram();
+        plugin.getMobConfig().saveMobs();
+        MBCommand.showHologram(plugin.getMineBlocks().getBukkitAudiences().player(player), "mm", mob.getId(), mob.getHologramLines());
+    }
+
+    @Subcommand("hologram addline")
+    @Syntax("<id> <text>")
+    @CommandCompletion("@mobids")
+    public void addHologramLine(Player player, String id, String text) {
+        MineMob mob = plugin.getMobRegistry().getById(id);
+        if (mob == null) {
+            player.sendMessage(Colors.colorize("&cMob with that ID does not exist!"));
+            return;
+        }
+
+        mob.getHologramLines().add(text);
+        mob.updateHologram();
+        plugin.getMobConfig().saveMobs();
+        MBCommand.showHologram(plugin.getMineBlocks().getBukkitAudiences().player(player), "mm", mob.getId(), mob.getHologramLines());
     }
 
     @Subcommand("move")

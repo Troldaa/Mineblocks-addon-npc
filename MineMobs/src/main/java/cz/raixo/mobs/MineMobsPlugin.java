@@ -44,6 +44,10 @@ public class MineMobsPlugin extends JavaPlugin {
         mobConfig.loadMobs();
     }
 
+    public void saveConfiguration() {
+        if (mobConfig != null) mobConfig.saveMobs();
+    }
+
     @Override
     public void onDisable() {
         if (mobConfig != null) {

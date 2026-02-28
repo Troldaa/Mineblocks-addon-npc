@@ -9,10 +9,6 @@ import cz.raixo.blocks.util.color.Colors;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import cz.raixo.blocks.util.color.Colors;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
@@ -54,7 +50,9 @@ public class MineMob {
     private double launchRange = 5.0;
     private int fireworkHeight = 5;
     private boolean tntCannonEffect = true;
+    private int tntCannonCount = 8;
     private boolean chickenLauncherEffect = false;
+    private double chickenLauncherRange = 1.2;
     private double mobScale = 1.0;
 
     private Entity spawnedEntity;
@@ -62,8 +60,9 @@ public class MineMob {
     private BukkitTask ticker;
 
     public void spawn() {
+        if (id == null) return; // Prevent spawning if being deleted
         Entity old = spawnedEntity;
-        if (spawnedEntity != null && !spawnedEntity.isDead()) {
+        if (spawnedEntity != null) {
             spawnedEntity.remove();
         }
         spawnedEntity = location.getWorld().spawnEntity(location, type);
@@ -79,8 +78,18 @@ public class MineMob {
                 scale = (Attribute) Attribute.class.getField("GENERIC_SCALE").get(null);
             } catch (Exception e) {
                 try {
+                    // Try Paper/Spigot 1.21.x name
                     scale = (Attribute) Attribute.class.getField("SCALE").get(null);
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                    try {
+                        // Try older naming
+                        scale = Attribute.valueOf("GENERIC_SCALE");
+                    } catch (Exception ignored2) {
+                        try {
+                            scale = Attribute.valueOf("SCALE");
+                        } catch (Exception ignored3) {}
+                    }
+                }
             }
 
             if (scale != null) {
@@ -123,6 +132,9 @@ public class MineMob {
 
     public void remove() {
         if (spawnedEntity != null) {
+            if (spawnedEntity instanceof Wither) {
+                ((Wither) spawnedEntity).setHealth(0); // Force kill for Wither
+            }
             spawnedEntity.remove();
             spawnedEntity = null;
         }
@@ -235,7 +247,7 @@ public class MineMob {
     }
 
     private void spawnTntCannon() {
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < tntCannonCount; i++) {
             double h = (spawnedEntity != null ? spawnedEntity.getHeight() : 1.0) / 2.0;
             TNTPrimed tnt = location.getWorld().spawn(location.clone().add(0, h, 0), TNTPrimed.class);
             tnt.setFuseTicks(40);
@@ -261,7 +273,7 @@ public class MineMob {
 
     private void spawnChickenLauncher() {
         Chicken chicken = location.getWorld().spawn(location.clone().add(0, 1, 0), Chicken.class);
-        chicken.setVelocity(new Vector(0, 1.2, 0)); // Launch up
+        chicken.setVelocity(new Vector(0, chickenLauncherRange, 0)); // Launch up
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             Location loc = chicken.getLocation();
             chicken.remove();
@@ -294,7 +306,7 @@ public class MineMob {
 
     public void broadcast(String message, Player attacker) {
         if (message == null || message.isEmpty()) return;
-        String coloredMessage = Colors.colorize(message.replace("%player%", attacker.getName())).replace('&', '§');
+        String coloredMessage = Colors.colorize(message.replace("%player%", attacker.getName()));
         for (Player p : plugin.getServer().getOnlinePlayers()) {
             p.sendMessage(plugin.getMineBlocks().getIntegrationManager().setPlaceholders(p, coloredMessage));
         }
@@ -350,6 +362,6 @@ public class MineMob {
                            .replace("%playerhits_" + i + "%", "0");
             }
         }
-        return Colors.colorize(line).replace('&', '§');
+        return Colors.colorize(line);
     }
 }

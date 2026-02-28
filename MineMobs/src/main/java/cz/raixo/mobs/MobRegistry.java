@@ -22,6 +22,7 @@ public class MobRegistry {
             mobByEntity.remove(mob.getSpawnedEntity().getUniqueId());
         }
         mob.remove();
+        mob.setId(null); // Prevent re-spawning
         mob.getPlugin().getMobConfig().saveMobs();
     }
 

@@ -56,7 +56,7 @@ public class MobConfig {
                     lastRewards.add(Reward.parse(rewardsSec.getConfigurationSection(rName)));
                 }
             }
-            mob.setRewards(new BlockRewards(plugin.getMineBlocks(), null, new LinkedList<>(), lastRewards));
+            mob.setRewards(new BlockRewards(plugin.getMineBlocks(), new LinkedList<>(), lastRewards));
 
             mob.setMessages(new BlockMessages(mobSection.getString("break-message", "&aMob %player% was defeated!")));
             mob.setPermission(mobSection.getString("permission"));
@@ -72,7 +72,9 @@ public class MobConfig {
             mob.setLaunchRange(mobSection.getDouble("launch-range", 5.0));
             mob.setFireworkHeight(mobSection.getInt("firework-height", 5));
             mob.setTntCannonEffect(mobSection.getBoolean("tnt-cannon", true));
+            mob.setTntCannonCount(mobSection.getInt("tnt-count", 8));
             mob.setChickenLauncherEffect(mobSection.getBoolean("chicken-launcher", false));
+            mob.setChickenLauncherRange(mobSection.getDouble("chicken-range", 1.2));
             mob.setMobScale(mobSection.getDouble("mob-scale", 1.0));
 
             plugin.getMobRegistry().register(mob);
@@ -99,7 +101,9 @@ public class MobConfig {
             config.set(path + ".launch-range", mob.getLaunchRange());
             config.set(path + ".firework-height", mob.getFireworkHeight());
             config.set(path + ".tnt-cannon", mob.isTntCannonEffect());
+            config.set(path + ".tnt-count", mob.getTntCannonCount());
             config.set(path + ".chicken-launcher", mob.isChickenLauncherEffect());
+            config.set(path + ".chicken-range", mob.getChickenLauncherRange());
             config.set(path + ".mob-scale", mob.getMobScale());
 
             ConfigurationSection rewardsSec = config.createSection(path + ".rewards");
