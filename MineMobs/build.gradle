@@ -36,6 +36,11 @@ dependencies {
 
 shadowJar {
     archiveFileName = "MineMobs-${project.version}.jar"
+    relocate 'co.aikar.commands', 'cz.raixo.blocks.libs.acf'
+    relocate 'co.aikar.locales', 'cz.raixo.blocks.libs.acf.locales'
+    relocate 'de.themoep.minedown', 'cz.raixo.blocks.libs.minedown'
+    relocate 'net.kyori.adventure', 'cz.raixo.blocks.libs.adventure'
+    relocate 'net.kyori.examination', 'cz.raixo.blocks.libs.adventure.examination'
 
     dependencies {
         exclude(project(':MineBlocks'))
