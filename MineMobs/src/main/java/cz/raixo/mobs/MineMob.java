@@ -62,19 +62,32 @@ public class MineMob {
     private BukkitTask ticker;
 
     public void spawn() {
+        Entity old = spawnedEntity;
         if (spawnedEntity != null && !spawnedEntity.isDead()) {
             spawnedEntity.remove();
         }
         spawnedEntity = location.getWorld().spawnEntity(location, type);
+        plugin.getMobRegistry().updateEntityMap(this, old, spawnedEntity);
         if (spawnedEntity instanceof LivingEntity) {
             LivingEntity living = (LivingEntity) spawnedEntity;
             living.setAI(false);
             living.setRemoveWhenFarAway(false);
             living.setPersistent(true);
 
-            AttributeInstance scaleAttr = living.getAttribute(Attribute.valueOf("GENERIC_SCALE"));
-            if (scaleAttr != null) {
-                scaleAttr.setBaseValue(mobScale);
+            Attribute scale = null;
+            try {
+                scale = (Attribute) Attribute.class.getField("GENERIC_SCALE").get(null);
+            } catch (Exception e) {
+                try {
+                    scale = (Attribute) Attribute.class.getField("SCALE").get(null);
+                } catch (Exception ignored) {}
+            }
+
+            if (scale != null) {
+                AttributeInstance scaleAttr = living.getAttribute(scale);
+                if (scaleAttr != null) {
+                    scaleAttr.setBaseValue(mobScale);
+                }
             }
 
             updateName();
@@ -114,7 +127,12 @@ public class MineMob {
             spawnedEntity = null;
         }
         removeHologram();
-        if (ticker != null) ticker.cancel();
+        if (ticker != null) {
+            ticker.cancel();
+            ticker = null;
+        }
+        isCoolingDown = false;
+        remainingCooldown = 0;
     }
 
     public Runnable onDamage(Player player) {
@@ -228,6 +246,17 @@ public class MineMob {
             Vector velocity = new Vector(Math.cos(angle), 0.5, Math.sin(angle)).multiply(0.5);
             tnt.setVelocity(velocity);
         }
+
+        // Push nearby players
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            for (Player p : location.getWorld().getPlayers()) {
+                if (p.getLocation().distance(location) < 5) {
+                    Vector dir = p.getLocation().toVector().subtract(location.toVector()).normalize();
+                    dir.setY(0.8);
+                    p.setVelocity(dir.multiply(1.2));
+                }
+            }
+        }, 40L); // Match TNT fuse
     }
 
     private void spawnChickenLauncher() {
@@ -265,7 +294,7 @@ public class MineMob {
 
     public void broadcast(String message, Player attacker) {
         if (message == null || message.isEmpty()) return;
-        String coloredMessage = Colors.colorize(message.replace("%player%", attacker.getName()));
+        String coloredMessage = Colors.colorize(message.replace("%player%", attacker.getName())).replace('&', '§');
         for (Player p : plugin.getServer().getOnlinePlayers()) {
             p.sendMessage(plugin.getMineBlocks().getIntegrationManager().setPlaceholders(p, coloredMessage));
         }
@@ -321,6 +350,6 @@ public class MineMob {
                            .replace("%playerhits_" + i + "%", "0");
             }
         }
-        return Colors.colorize(line);
+        return Colors.colorize(line).replace('&', '§');
     }
 }

@@ -6,6 +6,7 @@ import cz.raixo.blocks.block.health.BlockHealth;
 import cz.raixo.blocks.block.messages.BlockMessages;
 import cz.raixo.blocks.block.rewards.BlockRewards;
 import cz.raixo.blocks.util.color.Colors;
+import org.bukkit.Location;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 
@@ -127,5 +128,28 @@ public class MMCommand extends BaseCommand {
         }
 
         new MobEditMenu(mob).open(player);
+    }
+
+    @Subcommand("move")
+    @Syntax("<id> [x y z]")
+    @CommandCompletion("@mobids @nothing")
+    public void move(Player player, String id, @Optional Double x, @Optional Double y, @Optional Double z) {
+        MineMob mob = plugin.getMobRegistry().getById(id);
+        if (mob == null) {
+            player.sendMessage(Colors.colorize("&cMob with that ID does not exist!"));
+            return;
+        }
+
+        Location newLoc;
+        if (x != null && y != null && z != null) {
+            newLoc = new Location(player.getWorld(), x, y, z);
+        } else {
+            newLoc = player.getLocation();
+        }
+
+        mob.setLocation(newLoc);
+        mob.spawn(); // Re-spawns at new location
+        plugin.getMobConfig().saveMobs();
+        player.sendMessage(Colors.colorize("&aMineMob " + id + " moved!"));
     }
 }
