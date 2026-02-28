@@ -22,6 +22,7 @@ public class MobListener implements Listener {
         if (mob == null) return;
 
         e.setCancelled(true);
+        if (mob.isCoolingDown()) return;
 
         if (e.getDamager() instanceof Player) {
             Player player = (Player) e.getDamager();

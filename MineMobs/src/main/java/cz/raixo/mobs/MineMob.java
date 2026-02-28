@@ -10,10 +10,12 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
 
@@ -32,7 +34,16 @@ public class MineMob {
     private BlockTop top = new BlockTop();
     private Map<UUID, PlayerData> playerDataMap = new HashMap<>();
 
+    private List<String> hologramLines = new ArrayList<>();
+    private Sound hitSound = Sound.ENTITY_EXPERIENCE_ORB_PICKUP;
+    private int cooldownSeconds = 10;
+    private boolean isCoolingDown = false;
+    private int regenerationIdleTicks = 100; // 5 seconds
+    private long lastHitTime = 0;
+
     private Entity spawnedEntity;
+    private cz.raixo.blocks.integration.models.hologram.Hologram hologram;
+    private BukkitTask ticker;
 
     public void spawn() {
         if (spawnedEntity != null && !spawnedEntity.isDead()) {
@@ -44,9 +55,22 @@ public class MineMob {
             living.setAI(false);
             living.setRemoveWhenFarAway(false);
             living.setPersistent(true);
-            // We can set custom name to show health if we want, or use holograms if we integrate deeper
             updateName();
         }
+        createHologram();
+        startTicker();
+    }
+
+    private void startTicker() {
+        if (ticker != null) ticker.cancel();
+        ticker = plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
+            if (isCoolingDown) return;
+            if (health.getHealth() < health.getMaxHealth() && System.currentTimeMillis() - lastHitTime > regenerationIdleTicks * 50L) {
+                health.setHealth(health.getHealth() + 1);
+                updateName();
+                updateHologram();
+            }
+        }, 20L, 20L);
     }
 
     public void updateName() {
@@ -62,10 +86,16 @@ public class MineMob {
             spawnedEntity.remove();
             spawnedEntity = null;
         }
+        removeHologram();
+        if (ticker != null) ticker.cancel();
     }
 
     public Runnable onDamage(Player player) {
+        if (isCoolingDown) return () -> {};
+
         health.decrement();
+        lastHitTime = System.currentTimeMillis();
+        player.playSound(location, hitSound, 1.0f, 1.0f);
 
         List<Runnable> runnables = new LinkedList<>();
         PlayerData playerData = playerDataMap.computeIfAbsent(player.getUniqueId(), uuid -> new PlayerData(uuid, player.getName()));
@@ -77,6 +107,7 @@ public class MineMob {
             runnables.add(onDeath(player));
         } else {
             updateName();
+            updateHologram();
         }
 
         return () -> runnables.forEach(Runnable::run);
@@ -85,7 +116,22 @@ public class MineMob {
     private Runnable onDeath(Player player) {
         Runnable runnable = rewards.giveLastRewards(player.getUniqueId(), playerDataMap);
         broadcast(messages.getBreakMessage(), player);
-        reset();
+
+        isCoolingDown = true;
+        if (spawnedEntity instanceof LivingEntity) {
+            spawnedEntity.setGlowing(true);
+        }
+        updateName();
+        updateHologram();
+
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            isCoolingDown = false;
+            if (spawnedEntity != null) {
+                spawnedEntity.setGlowing(false);
+            }
+            reset();
+        }, cooldownSeconds * 20L);
+
         return runnable;
     }
 
@@ -93,7 +139,12 @@ public class MineMob {
         health.reset();
         playerDataMap.clear();
         top.clear();
-        spawn();
+        if (spawnedEntity == null || spawnedEntity.isDead()) {
+            spawn();
+        } else {
+            updateName();
+            updateHologram();
+        }
     }
 
     public void broadcast(String message, Player attacker) {
@@ -102,5 +153,47 @@ public class MineMob {
         for (Player p : plugin.getServer().getOnlinePlayers()) {
             p.sendMessage(plugin.getMineBlocks().getIntegrationManager().setPlaceholders(p, coloredMessage));
         }
+    }
+
+    public void createHologram() {
+        removeHologram();
+        if (hologramLines.isEmpty()) return;
+        hologram = plugin.getMineBlocks().getIntegrationManager().getHologramProvider().provide("minemob_" + id, location.clone().add(0, 2.5, 0));
+        updateHologram();
+    }
+
+    public void updateHologram() {
+        if (hologram == null) return;
+        List<String> lines = new ArrayList<>();
+        for (String line : hologramLines) {
+            lines.add(replacePlaceholders(line));
+        }
+        hologram.setLines(lines);
+    }
+
+    public void removeHologram() {
+        if (hologram != null) {
+            hologram.delete();
+            hologram = null;
+        }
+    }
+
+    private String replacePlaceholders(String line) {
+        line = line.replace("%name%", id)
+                   .replace("%health%", String.valueOf(health.getHealth()))
+                   .replace("%max_health%", String.valueOf(health.getMaxHealth()));
+
+        List<PlayerData> players = top.getPlayers();
+        for (int i = 1; i <= 3; i++) {
+            if (players.size() >= i) {
+                PlayerData data = players.get(i - 1);
+                line = line.replace("%player_name_" + i + "%", data.getDisplayName())
+                           .replace("%playerhits_" + i + "%", String.valueOf(data.getBreaks()));
+            } else {
+                line = line.replace("%player_name_" + i + "%", "---")
+                           .replace("%playerhits_" + i + "%", "0");
+            }
+        }
+        return Colors.colorize(line);
     }
 }

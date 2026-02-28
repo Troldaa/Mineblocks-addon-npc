@@ -44,6 +44,14 @@ public class MMCommand extends BaseCommand {
         mob.setHealth(new BlockHealth(null, 10)); // Default 10 health
         mob.setRewards(new BlockRewards(plugin.getMineBlocks(), null, new LinkedList<>(), new LinkedList<>()));
         mob.setMessages(new BlockMessages("&aMob %player% was defeated!"));
+        mob.setHologramLines(new LinkedList<>(List.of(
+                "&b&l%name%",
+                "&7Health: &c%health%/%max_health%",
+                "&b&lTOP HITS",
+                "&71. %player_name_1% &8- &b%playerhits_1%",
+                "&72. %player_name_2% &8- &b%playerhits_2%",
+                "&73. %player_name_3% &8- &b%playerhits_3%"
+        )));
 
         plugin.getMobRegistry().register(mob);
         player.sendMessage(Colors.colorize("&aMineMob " + id + " created!"));
