@@ -82,7 +82,7 @@ public class MMCommand extends BaseCommand {
                 "&71. %player_name_1% &8- &b%playerhits_1%",
                 "&72. %player_name_2% &8- &b%playerhits_2%",
                 "&73. %player_name_3% &8- &b%playerhits_3%",
-                "&cRespawn in %cooldown%s"
+                "&cRespawn in %cooldown%"
         )));
 
         plugin.getMobRegistry().register(mob);

@@ -66,7 +66,7 @@ public class MobConfig {
             mob.setCooldownSeconds(mobSection.getInt("cooldown", 10));
             mob.setRegenerationIdleSeconds(mobSection.getInt("regeneration-idle-seconds", 5));
             mob.setDefeatSound(Sound.valueOf(mobSection.getString("defeat-sound", "ENTITY_FIREWORK_ROCKET_LARGE_BLAST")));
-            mob.setGlowingRed(mobSection.getBoolean("glowing-red", true));
+            mob.setGlowMode(mobSection.getInt("glow-mode", 2));
             mob.setLaunchMode(mobSection.getBoolean("launch-mode", false));
             mob.setLaunchChance(mobSection.getInt("launch-chance", 100));
             mob.setLaunchRange(mobSection.getDouble("launch-range", 5.0));
@@ -95,7 +95,7 @@ public class MobConfig {
             config.set(path + ".defeat-sound", mob.getDefeatSound().name());
             config.set(path + ".cooldown", mob.getCooldownSeconds());
             config.set(path + ".regeneration-idle-seconds", mob.getRegenerationIdleSeconds());
-            config.set(path + ".glowing-red", mob.isGlowingRed());
+            config.set(path + ".glow-mode", mob.getGlowMode());
             config.set(path + ".launch-mode", mob.isLaunchMode());
             config.set(path + ".launch-chance", mob.getLaunchChance());
             config.set(path + ".launch-range", mob.getLaunchRange());

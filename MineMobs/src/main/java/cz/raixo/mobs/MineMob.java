@@ -44,7 +44,7 @@ public class MineMob {
     private int regenerationIdleSeconds = 5;
     private long lastHitTime = 0;
 
-    private boolean glowingRed = true;
+    private int glowMode = 2; // 0: None, 1: White, 2: Red
     private boolean launchMode = false;
     private int launchChance = 100;
     private double launchRange = 5.0;
@@ -188,8 +188,10 @@ public class MineMob {
         isCoolingDown = true;
         remainingCooldown = cooldownSeconds;
         if (spawnedEntity instanceof LivingEntity) {
-            spawnedEntity.setGlowing(true);
-            if (glowingRed) {
+            if (glowMode == 1) {
+                spawnedEntity.setGlowing(true);
+            } else if (glowMode == 2) {
+                spawnedEntity.setGlowing(true);
                 setRedGlow(spawnedEntity);
             }
         }
