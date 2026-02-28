@@ -66,6 +66,11 @@ public class MobConfig {
             mob.setCooldownSeconds(mobSection.getInt("cooldown", 10));
             mob.setRegenerationIdleSeconds(mobSection.getInt("regeneration-idle-seconds", 5));
             mob.setDefeatSound(Sound.valueOf(mobSection.getString("defeat-sound", "ENTITY_FIREWORK_ROCKET_LARGE_BLAST")));
+            mob.setGlowingRed(mobSection.getBoolean("glowing-red", true));
+            mob.setLaunchMode(mobSection.getBoolean("launch-mode", false));
+            mob.setLaunchRange(mobSection.getDouble("launch-range", 5.0));
+            mob.setFireworkHeight(mobSection.getInt("firework-height", 5));
+            mob.setTntCannonEffect(mobSection.getBoolean("tnt-cannon", true));
 
             plugin.getMobRegistry().register(mob);
         }
@@ -85,6 +90,11 @@ public class MobConfig {
             config.set(path + ".defeat-sound", mob.getDefeatSound().name());
             config.set(path + ".cooldown", mob.getCooldownSeconds());
             config.set(path + ".regeneration-idle-seconds", mob.getRegenerationIdleSeconds());
+            config.set(path + ".glowing-red", mob.isGlowingRed());
+            config.set(path + ".launch-mode", mob.isLaunchMode());
+            config.set(path + ".launch-range", mob.getLaunchRange());
+            config.set(path + ".firework-height", mob.getFireworkHeight());
+            config.set(path + ".tnt-cannon", mob.isTntCannonEffect());
 
             ConfigurationSection rewardsSec = config.createSection(path + ".rewards");
             for (Reward reward : mob.getRewards().getLastRewards()) {

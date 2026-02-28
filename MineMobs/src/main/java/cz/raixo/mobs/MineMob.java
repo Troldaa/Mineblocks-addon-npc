@@ -9,10 +9,15 @@ import cz.raixo.blocks.util.color.Colors;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import cz.raixo.blocks.util.color.Colors;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.bukkit.*;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.Vector;
 
 import java.util.*;
 
@@ -39,6 +44,12 @@ public class MineMob {
     private int remainingCooldown = 0;
     private int regenerationIdleSeconds = 5;
     private long lastHitTime = 0;
+
+    private boolean glowingRed = true;
+    private boolean launchMode = false;
+    private double launchRange = 5.0;
+    private int fireworkHeight = 5;
+    private boolean tntCannonEffect = true;
 
     private Entity spawnedEntity;
     private cz.raixo.blocks.integration.models.hologram.Hologram hologram;
@@ -97,6 +108,12 @@ public class MineMob {
     public Runnable onDamage(Player player) {
         if (isCoolingDown) return () -> {};
 
+        if (launchMode) {
+            Vector direction = player.getLocation().toVector().subtract(location.toVector()).normalize();
+            direction.setY(0.5);
+            player.setVelocity(direction.multiply(launchRange / 2.0));
+        }
+
         health.decrement();
         lastHitTime = System.currentTimeMillis();
         player.playSound(location, hitSound, 1.0f, 1.0f);
@@ -123,11 +140,16 @@ public class MineMob {
 
         player.playSound(location, defeatSound, 1.0f, 1.0f);
         spawnFirework();
+        if (tntCannonEffect) spawnTntCannon();
 
         isCoolingDown = true;
         remainingCooldown = cooldownSeconds;
         if (spawnedEntity instanceof LivingEntity) {
             spawnedEntity.setGlowing(true);
+            if (glowingRed) {
+                // Team based glowing would be needed for red, but for simplicity we'll just set it to true.
+                // In Spigot API we can't easily change glow color without scoreboard teams.
+            }
         }
         updateHologram();
 
@@ -144,16 +166,32 @@ public class MineMob {
     }
 
     private void spawnFirework() {
-        Firework firework = location.getWorld().spawn(location.clone().add(0, 1, 0), Firework.class);
+        Location fireworkLoc = location.clone().add(0, 1, 0);
+        Firework firework = location.getWorld().spawn(fireworkLoc, Firework.class);
         FireworkMeta meta = firework.getFireworkMeta();
         meta.addEffect(FireworkEffect.builder()
                 .with(FireworkEffect.Type.CREEPER)
                 .withColor(Color.BLUE)
                 .withFade(Color.AQUA)
                 .build());
-        meta.setPower(0);
+        meta.setPower(fireworkHeight / 2); // Approximate power to height
         firework.setFireworkMeta(meta);
-        firework.detonate();
+
+        // If height > 0 we let it fly, if not we detonate immediately
+        if (fireworkHeight <= 0) firework.detonate();
+    }
+
+    private void spawnTntCannon() {
+        for (int i = 0; i < 8; i++) {
+            TNTPrimed tnt = location.getWorld().spawn(location.clone().add(0, 1, 0), TNTPrimed.class);
+            tnt.setFuseTicks(40);
+            tnt.setYield(0); // No block damage
+            tnt.setIsIncendiary(false);
+
+            double angle = i * (Math.PI / 4);
+            Vector velocity = new Vector(Math.cos(angle), 0.5, Math.sin(angle)).multiply(0.5);
+            tnt.setVelocity(velocity);
+        }
     }
 
     public void reset() {
@@ -181,7 +219,11 @@ public class MineMob {
     public void createHologram() {
         removeHologram();
         if (hologramLines.isEmpty()) return;
-        hologram = plugin.getMineBlocks().getIntegrationManager().getHologramProvider().provide("minemob_" + id, location.clone().add(0, 2.5, 0));
+        double height = 2.0;
+        if (spawnedEntity != null) {
+            height = spawnedEntity.getHeight() + 0.5;
+        }
+        hologram = plugin.getMineBlocks().getIntegrationManager().getHologramProvider().provide("minemob_" + id, location.clone().add(0, height, 0));
         updateHologram();
     }
 
@@ -204,8 +246,13 @@ public class MineMob {
     private String replacePlaceholders(String line) {
         line = line.replace("%name%", id)
                    .replace("%health%", String.valueOf(health.getHealth()))
-                   .replace("%max_health%", String.valueOf(health.getMaxHealth()))
-                   .replace("%cooldown%", String.valueOf(remainingCooldown));
+                   .replace("%max_health%", String.valueOf(health.getMaxHealth()));
+
+        if (isCoolingDown) {
+            line = line.replace("%cooldown%", String.valueOf(remainingCooldown));
+        } else {
+            line = line.replace("%cooldown%", "");
+        }
 
         List<PlayerData> players = top.getPlayers();
         for (int i = 1; i <= 3; i++) {

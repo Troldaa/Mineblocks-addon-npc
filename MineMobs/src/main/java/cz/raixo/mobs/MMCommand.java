@@ -9,6 +9,7 @@ import cz.raixo.blocks.util.color.Colors;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -26,11 +27,21 @@ public class MMCommand extends BaseCommand {
             }
             return ids;
         });
+
+        plugin.getCommandManager().getCommandCompletions().registerCompletion("usablemobs", c -> {
+            List<String> types = new ArrayList<>();
+            for (EntityType type : EntityType.values()) {
+                if (type.isAlive() && type.isSpawnable()) {
+                    types.add(type.name());
+                }
+            }
+            return types;
+        });
     }
 
     @Subcommand("create")
     @Syntax("<id> <type>")
-    @CommandCompletion("@nothing @entitytypes")
+    @CommandCompletion("@nothing @usablemobs")
     public void create(Player player, String id, EntityType type) {
         if (plugin.getMobRegistry().getById(id) != null) {
             player.sendMessage(Colors.colorize("&cMob with that ID already exists!"));
@@ -42,7 +53,15 @@ public class MMCommand extends BaseCommand {
         mob.setType(type);
         mob.setLocation(player.getLocation());
         mob.setHealth(new BlockHealth(null, 10)); // Default 10 health
-        mob.setRewards(new BlockRewards(plugin.getMineBlocks(), null, new LinkedList<>(), new LinkedList<>()));
+        // Default example rewards
+        List<cz.raixo.blocks.block.rewards.Reward> exampleRewards = new LinkedList<>();
+        exampleRewards.add(new cz.raixo.blocks.block.rewards.top.TopReward(
+                "example_reward",
+                cz.raixo.blocks.util.range.NumberRange.parse("1").get(),
+                cz.raixo.blocks.block.rewards.commands.RewardCommands.parse("RANDOM", List.of("say %player% is first!"))
+        ));
+
+        mob.setRewards(new BlockRewards(plugin.getMineBlocks(), null, new LinkedList<>(), exampleRewards));
         mob.setMessages(new BlockMessages("&aMob %player% was defeated!"));
         mob.setHologramLines(new LinkedList<>(List.of(
                 "&b&l%name%",
@@ -85,5 +104,18 @@ public class MMCommand extends BaseCommand {
     public void reload(Player player) {
         plugin.reload();
         player.sendMessage(Colors.colorize("&aMineMobs reloaded!"));
+    }
+
+    @Subcommand("edit")
+    @Syntax("<id>")
+    @CommandCompletion("@mobids")
+    public void edit(Player player, String id) {
+        MineMob mob = plugin.getMobRegistry().getById(id);
+        if (mob == null) {
+            player.sendMessage(Colors.colorize("&cMob with that ID does not exist!"));
+            return;
+        }
+
+        new MobEditMenu(mob).open(player);
     }
 }
