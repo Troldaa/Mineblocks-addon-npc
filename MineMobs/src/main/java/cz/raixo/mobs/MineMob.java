@@ -45,6 +45,7 @@ public class MineMob {
     private long lastHitTime = 0;
 
     private int glowMode = 2; // 0: None, 1: White, 2: Red
+    private boolean fireworkEffect = true;
     private boolean launchMode = false;
     private int launchChance = 100;
     private double launchRange = 5.0;
@@ -181,7 +182,7 @@ public class MineMob {
         broadcast(messages.getBreakMessage(), player);
 
         player.playSound(location, defeatSound, 1.0f, 1.0f);
-        spawnFirework();
+        if (fireworkEffect) spawnFirework();
         if (tntCannonEffect) spawnTntCannon();
         if (chickenLauncherEffect) spawnChickenLauncher();
 
