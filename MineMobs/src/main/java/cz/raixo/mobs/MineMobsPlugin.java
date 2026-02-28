@@ -35,6 +35,15 @@ public class MineMobsPlugin extends JavaPlugin {
         getLogger().info("MineMobs addon enabled successfully!");
     }
 
+    public void reload() {
+        if (mobRegistry != null) {
+            mobRegistry.getMobs().forEach(MineMob::remove);
+        }
+        mobRegistry = new MobRegistry();
+        mobConfig = new MobConfig(this);
+        mobConfig.loadMobs();
+    }
+
     @Override
     public void onDisable() {
         if (mobConfig != null) {

@@ -3,6 +3,7 @@ package cz.raixo.mobs;
 import cz.raixo.blocks.block.health.BlockHealth;
 import cz.raixo.blocks.block.messages.BlockMessages;
 import cz.raixo.blocks.block.rewards.BlockRewards;
+import cz.raixo.blocks.block.rewards.Reward;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
@@ -47,14 +48,24 @@ public class MobConfig {
             mob.setType(EntityType.valueOf(mobSection.getString("type", "ZOMBIE")));
             mob.setLocation(mobSection.getLocation("location"));
             mob.setHealth(new BlockHealth(null, mobSection.getInt("health", 10)));
-            mob.setRewards(new BlockRewards(plugin.getMineBlocks(), null, new LinkedList<>(), new LinkedList<>())); // Basic implementation
+
+            List<Reward> lastRewards = new LinkedList<>();
+            ConfigurationSection rewardsSec = mobSection.getConfigurationSection("rewards");
+            if (rewardsSec != null) {
+                for (String rName : rewardsSec.getKeys(false)) {
+                    lastRewards.add(Reward.parse(rewardsSec.getConfigurationSection(rName)));
+                }
+            }
+            mob.setRewards(new BlockRewards(plugin.getMineBlocks(), null, new LinkedList<>(), lastRewards));
+
             mob.setMessages(new BlockMessages(mobSection.getString("break-message", "&aMob %player% was defeated!")));
             mob.setPermission(mobSection.getString("permission"));
 
             mob.setHologramLines(mobSection.getStringList("hologram-lines"));
             mob.setHitSound(Sound.valueOf(mobSection.getString("hit-sound", "ENTITY_EXPERIENCE_ORB_PICKUP")));
             mob.setCooldownSeconds(mobSection.getInt("cooldown", 10));
-            mob.setRegenerationIdleTicks(mobSection.getInt("regeneration-idle-ticks", 100));
+            mob.setRegenerationIdleSeconds(mobSection.getInt("regeneration-idle-seconds", 5));
+            mob.setDefeatSound(Sound.valueOf(mobSection.getString("defeat-sound", "ENTITY_FIREWORK_ROCKET_LARGE_BLAST")));
 
             plugin.getMobRegistry().register(mob);
         }
@@ -71,8 +82,14 @@ public class MobConfig {
             config.set(path + ".permission", mob.getPermission());
             config.set(path + ".hologram-lines", mob.getHologramLines());
             config.set(path + ".hit-sound", mob.getHitSound().name());
+            config.set(path + ".defeat-sound", mob.getDefeatSound().name());
             config.set(path + ".cooldown", mob.getCooldownSeconds());
-            config.set(path + ".regeneration-idle-ticks", mob.getRegenerationIdleTicks());
+            config.set(path + ".regeneration-idle-seconds", mob.getRegenerationIdleSeconds());
+
+            ConfigurationSection rewardsSec = config.createSection(path + ".rewards");
+            for (Reward reward : mob.getRewards().getLastRewards()) {
+                Reward.save(rewardsSec.createSection(reward.getName()), reward);
+            }
         }
         try {
             config.save(file);

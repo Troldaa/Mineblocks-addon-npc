@@ -9,12 +9,9 @@ import cz.raixo.blocks.util.color.Colors;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.bukkit.Location;
-import org.bukkit.Sound;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
+import org.bukkit.*;
+import org.bukkit.entity.*;
+import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
@@ -36,9 +33,11 @@ public class MineMob {
 
     private List<String> hologramLines = new ArrayList<>();
     private Sound hitSound = Sound.ENTITY_EXPERIENCE_ORB_PICKUP;
+    private Sound defeatSound = Sound.ENTITY_FIREWORK_ROCKET_LARGE_BLAST;
     private int cooldownSeconds = 10;
     private boolean isCoolingDown = false;
-    private int regenerationIdleTicks = 100; // 5 seconds
+    private int remainingCooldown = 0;
+    private int regenerationIdleSeconds = 5;
     private long lastHitTime = 0;
 
     private Entity spawnedEntity;
@@ -64,10 +63,15 @@ public class MineMob {
     private void startTicker() {
         if (ticker != null) ticker.cancel();
         ticker = plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
-            if (isCoolingDown) return;
-            if (health.getHealth() < health.getMaxHealth() && System.currentTimeMillis() - lastHitTime > regenerationIdleTicks * 50L) {
+            if (isCoolingDown) {
+                if (remainingCooldown > 0) {
+                    remainingCooldown--;
+                    updateHologram();
+                }
+                return;
+            }
+            if (health.getHealth() < health.getMaxHealth() && System.currentTimeMillis() - lastHitTime > regenerationIdleSeconds * 1000L) {
                 health.setHealth(health.getHealth() + 1);
-                updateName();
                 updateHologram();
             }
         }, 20L, 20L);
@@ -76,8 +80,8 @@ public class MineMob {
     public void updateName() {
         if (spawnedEntity instanceof LivingEntity) {
             LivingEntity living = (LivingEntity) spawnedEntity;
-            living.setCustomName(Colors.colorize("&b" + id + " &7[" + health.getHealth() + "/" + health.getMaxHealth() + "]"));
-            living.setCustomNameVisible(true);
+            living.setCustomName("");
+            living.setCustomNameVisible(false);
         }
     }
 
@@ -117,15 +121,19 @@ public class MineMob {
         Runnable runnable = rewards.giveLastRewards(player.getUniqueId(), playerDataMap);
         broadcast(messages.getBreakMessage(), player);
 
+        player.playSound(location, defeatSound, 1.0f, 1.0f);
+        spawnFirework();
+
         isCoolingDown = true;
+        remainingCooldown = cooldownSeconds;
         if (spawnedEntity instanceof LivingEntity) {
             spawnedEntity.setGlowing(true);
         }
-        updateName();
         updateHologram();
 
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             isCoolingDown = false;
+            remainingCooldown = 0;
             if (spawnedEntity != null) {
                 spawnedEntity.setGlowing(false);
             }
@@ -135,10 +143,25 @@ public class MineMob {
         return runnable;
     }
 
+    private void spawnFirework() {
+        Firework firework = location.getWorld().spawn(location.clone().add(0, 1, 0), Firework.class);
+        FireworkMeta meta = firework.getFireworkMeta();
+        meta.addEffect(FireworkEffect.builder()
+                .with(FireworkEffect.Type.CREEPER)
+                .withColor(Color.BLUE)
+                .withFade(Color.AQUA)
+                .build());
+        meta.setPower(0);
+        firework.setFireworkMeta(meta);
+        firework.detonate();
+    }
+
     public void reset() {
         health.reset();
         playerDataMap.clear();
         top.clear();
+        remainingCooldown = 0;
+        isCoolingDown = false;
         if (spawnedEntity == null || spawnedEntity.isDead()) {
             spawn();
         } else {
@@ -181,7 +204,8 @@ public class MineMob {
     private String replacePlaceholders(String line) {
         line = line.replace("%name%", id)
                    .replace("%health%", String.valueOf(health.getHealth()))
-                   .replace("%max_health%", String.valueOf(health.getMaxHealth()));
+                   .replace("%max_health%", String.valueOf(health.getMaxHealth()))
+                   .replace("%cooldown%", String.valueOf(remainingCooldown));
 
         List<PlayerData> players = top.getPlayers();
         for (int i = 1; i <= 3; i++) {

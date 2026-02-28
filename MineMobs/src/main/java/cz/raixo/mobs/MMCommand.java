@@ -50,10 +50,12 @@ public class MMCommand extends BaseCommand {
                 "&b&lTOP HITS",
                 "&71. %player_name_1% &8- &b%playerhits_1%",
                 "&72. %player_name_2% &8- &b%playerhits_2%",
-                "&73. %player_name_3% &8- &b%playerhits_3%"
+                "&73. %player_name_3% &8- &b%playerhits_3%",
+                "&cRespawn in %cooldown%s"
         )));
 
         plugin.getMobRegistry().register(mob);
+        plugin.getMobConfig().saveMobs();
         player.sendMessage(Colors.colorize("&aMineMob " + id + " created!"));
     }
 
@@ -77,5 +79,11 @@ public class MMCommand extends BaseCommand {
 
         plugin.getMobRegistry().unregister(mob);
         player.sendMessage(Colors.colorize("&aMineMob " + id + " deleted!"));
+    }
+
+    @Subcommand("reload")
+    public void reload(Player player) {
+        plugin.reload();
+        player.sendMessage(Colors.colorize("&aMineMobs reloaded!"));
     }
 }

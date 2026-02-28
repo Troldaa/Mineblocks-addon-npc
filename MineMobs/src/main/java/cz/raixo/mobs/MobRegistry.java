@@ -22,6 +22,7 @@ public class MobRegistry {
             mobByEntity.remove(mob.getSpawnedEntity().getUniqueId());
         }
         mob.remove();
+        mob.getPlugin().getMobConfig().saveMobs();
     }
 
     public MineMob getById(String id) {
