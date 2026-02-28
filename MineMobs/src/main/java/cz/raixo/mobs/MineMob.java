@@ -14,6 +14,8 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.scheduler.BukkitTask;
@@ -48,9 +50,12 @@ public class MineMob {
 
     private boolean glowingRed = true;
     private boolean launchMode = false;
+    private int launchChance = 100;
     private double launchRange = 5.0;
     private int fireworkHeight = 5;
     private boolean tntCannonEffect = true;
+    private boolean chickenLauncherEffect = false;
+    private double mobScale = 1.0;
 
     private Entity spawnedEntity;
     private cz.raixo.blocks.integration.models.hologram.Hologram hologram;
@@ -66,6 +71,12 @@ public class MineMob {
             living.setAI(false);
             living.setRemoveWhenFarAway(false);
             living.setPersistent(true);
+
+            AttributeInstance scaleAttr = living.getAttribute(Attribute.valueOf("GENERIC_SCALE"));
+            if (scaleAttr != null) {
+                scaleAttr.setBaseValue(mobScale);
+            }
+
             updateName();
         }
         createHologram();
@@ -109,7 +120,7 @@ public class MineMob {
     public Runnable onDamage(Player player) {
         if (isCoolingDown) return () -> {};
 
-        if (launchMode) {
+        if (launchMode && new Random().nextInt(100) < launchChance) {
             Vector direction = player.getLocation().toVector().subtract(location.toVector()).normalize();
             direction.setY(0.5);
             player.setVelocity(direction.multiply(launchRange / 2.0));
@@ -142,6 +153,7 @@ public class MineMob {
         player.playSound(location, defeatSound, 1.0f, 1.0f);
         spawnFirework();
         if (tntCannonEffect) spawnTntCannon();
+        if (chickenLauncherEffect) spawnChickenLauncher();
 
         isCoolingDown = true;
         remainingCooldown = cooldownSeconds;
@@ -171,20 +183,25 @@ public class MineMob {
         Team team = Bukkit.getScoreboardManager().getMainScoreboard().getTeam(teamName);
         if (team == null) {
             team = Bukkit.getScoreboardManager().getMainScoreboard().registerNewTeam(teamName);
-            team.setColor(ChatColor.RED);
         }
-        team.addEntry(entity.getUniqueId().toString());
+        team.setColor(ChatColor.RED);
+        String entry = entity instanceof Player ? entity.getName() : entity.getUniqueId().toString();
+        if (!team.hasEntry(entry)) {
+            team.addEntry(entry);
+        }
     }
 
     private void clearGlow(Entity entity) {
         Team team = Bukkit.getScoreboardManager().getMainScoreboard().getTeam("minemob_red");
         if (team != null) {
-            team.removeEntry(entity.getUniqueId().toString());
+            String entry = entity instanceof Player ? entity.getName() : entity.getUniqueId().toString();
+            team.removeEntry(entry);
         }
     }
 
     private void spawnFirework() {
-        Location fireworkLoc = location.clone().add(0, 1, 0);
+        double height = (spawnedEntity != null ? spawnedEntity.getHeight() : 1.0) + 0.1;
+        Location fireworkLoc = location.clone().add(0, height, 0);
         Firework firework = location.getWorld().spawn(fireworkLoc, Firework.class);
         FireworkMeta meta = firework.getFireworkMeta();
         meta.addEffect(FireworkEffect.builder()
@@ -201,7 +218,8 @@ public class MineMob {
 
     private void spawnTntCannon() {
         for (int i = 0; i < 8; i++) {
-            TNTPrimed tnt = location.getWorld().spawn(location.clone().add(0, 1, 0), TNTPrimed.class);
+            double h = (spawnedEntity != null ? spawnedEntity.getHeight() : 1.0) / 2.0;
+            TNTPrimed tnt = location.getWorld().spawn(location.clone().add(0, h, 0), TNTPrimed.class);
             tnt.setFuseTicks(40);
             tnt.setYield(0); // No block damage
             tnt.setIsIncendiary(false);
@@ -210,6 +228,25 @@ public class MineMob {
             Vector velocity = new Vector(Math.cos(angle), 0.5, Math.sin(angle)).multiply(0.5);
             tnt.setVelocity(velocity);
         }
+    }
+
+    private void spawnChickenLauncher() {
+        Chicken chicken = location.getWorld().spawn(location.clone().add(0, 1, 0), Chicken.class);
+        chicken.setVelocity(new Vector(0, 1.2, 0)); // Launch up
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            Location loc = chicken.getLocation();
+            chicken.remove();
+            Firework firework = loc.getWorld().spawn(loc, Firework.class);
+            FireworkMeta meta = firework.getFireworkMeta();
+            meta.addEffect(FireworkEffect.builder()
+                    .with(FireworkEffect.Type.BALL_LARGE)
+                    .withColor(Color.YELLOW)
+                    .withFade(Color.ORANGE)
+                    .build());
+            meta.setPower(0);
+            firework.setFireworkMeta(meta);
+            firework.detonate();
+        }, 15L); // Explode after ~0.75 seconds (reached peak)
     }
 
     public void reset() {

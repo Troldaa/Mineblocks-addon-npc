@@ -5,6 +5,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityCombustEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
@@ -57,6 +58,13 @@ public class MobListener implements Listener {
             e.getDrops().clear();
             e.setDroppedExp(0);
             // Mob will respawn in reset() called by onDamage or should be handled here if killed by other means
+        }
+    }
+
+    @EventHandler
+    public void onCombust(EntityCombustEvent e) {
+        if (plugin.getMobRegistry().getByEntity(e.getEntity()) != null) {
+            e.setCancelled(true);
         }
     }
 }

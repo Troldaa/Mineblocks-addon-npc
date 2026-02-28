@@ -56,9 +56,19 @@ public class MMCommand extends BaseCommand {
         // Default example rewards
         List<cz.raixo.blocks.block.rewards.Reward> exampleRewards = new LinkedList<>();
         exampleRewards.add(new cz.raixo.blocks.block.rewards.top.TopReward(
-                "example_reward",
+                "reward_1",
                 cz.raixo.blocks.util.range.NumberRange.parse("1").get(),
                 cz.raixo.blocks.block.rewards.commands.RewardCommands.parse("RANDOM", List.of("100;say %player% is first!"))
+        ));
+        exampleRewards.add(new cz.raixo.blocks.block.rewards.top.TopReward(
+                "reward_2",
+                cz.raixo.blocks.util.range.NumberRange.parse("2").get(),
+                cz.raixo.blocks.block.rewards.commands.RewardCommands.parse("RANDOM", List.of("100;say %player% is second!"))
+        ));
+        exampleRewards.add(new cz.raixo.blocks.block.rewards.top.TopReward(
+                "reward_3",
+                cz.raixo.blocks.util.range.NumberRange.parse("3").get(),
+                cz.raixo.blocks.block.rewards.commands.RewardCommands.parse("RANDOM", List.of("100;say %player% is third!"))
         ));
 
         mob.setRewards(new BlockRewards(plugin.getMineBlocks(), null, new LinkedList<>(), exampleRewards));

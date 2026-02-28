@@ -68,9 +68,12 @@ public class MobConfig {
             mob.setDefeatSound(Sound.valueOf(mobSection.getString("defeat-sound", "ENTITY_FIREWORK_ROCKET_LARGE_BLAST")));
             mob.setGlowingRed(mobSection.getBoolean("glowing-red", true));
             mob.setLaunchMode(mobSection.getBoolean("launch-mode", false));
+            mob.setLaunchChance(mobSection.getInt("launch-chance", 100));
             mob.setLaunchRange(mobSection.getDouble("launch-range", 5.0));
             mob.setFireworkHeight(mobSection.getInt("firework-height", 5));
             mob.setTntCannonEffect(mobSection.getBoolean("tnt-cannon", true));
+            mob.setChickenLauncherEffect(mobSection.getBoolean("chicken-launcher", false));
+            mob.setMobScale(mobSection.getDouble("mob-scale", 1.0));
 
             plugin.getMobRegistry().register(mob);
         }
@@ -92,9 +95,12 @@ public class MobConfig {
             config.set(path + ".regeneration-idle-seconds", mob.getRegenerationIdleSeconds());
             config.set(path + ".glowing-red", mob.isGlowingRed());
             config.set(path + ".launch-mode", mob.isLaunchMode());
+            config.set(path + ".launch-chance", mob.getLaunchChance());
             config.set(path + ".launch-range", mob.getLaunchRange());
             config.set(path + ".firework-height", mob.getFireworkHeight());
             config.set(path + ".tnt-cannon", mob.isTntCannonEffect());
+            config.set(path + ".chicken-launcher", mob.isChickenLauncherEffect());
+            config.set(path + ".mob-scale", mob.getMobScale());
 
             ConfigurationSection rewardsSec = config.createSection(path + ".rewards");
             for (Reward reward : mob.getRewards().getLastRewards()) {
