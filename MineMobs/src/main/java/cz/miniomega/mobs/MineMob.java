@@ -358,7 +358,7 @@ public class MineMob {
                      .replace("%s", String.valueOf(seconds));
     }
 
-    private String replacePlaceholders(String line) {
+    public String replacePlaceholders(String line) {
         line = line.replace("%name%", id)
                    .replace("%health%", health == null ? "0" : String.valueOf(health.health))
                    .replace("%max_health%", health == null ? "0" : String.valueOf(health.maxHealth));
