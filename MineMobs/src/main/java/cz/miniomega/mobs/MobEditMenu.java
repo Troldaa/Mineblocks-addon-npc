@@ -1,7 +1,7 @@
 package cz.miniomega.mobs;
 
 import cz.miniomega.mobs.gui.Gui;
-import cz.miniomega.mobs.gui.filler.map.MapGuiFiller;
+import cz.miniomega.mobs.gui.filler.slot.SlotGuiFiller;
 import cz.miniomega.mobs.gui.item.GuiItem;
 import cz.miniomega.mobs.gui.item.GuiItemBuilder;
 import cz.miniomega.mobs.gui.item.render.Renderer;
@@ -38,12 +38,11 @@ public class MobEditMenu {
 
     private Component parse(String s) {
         if (s == null) return Component.empty();
-        // Handle #RRGGBB format by converting to &#RRGGBB for MineDown
         String processed = s.replaceAll("(?<!&)#([A-Fa-f0-9]{6})", "&#$1");
         return MineDown.parse(processed);
     }
 
-    private void applySides(MapGuiFiller filler, int skipSlot) {
+    private void applySides(SlotGuiFiller filler, int skipSlot) {
         ItemStack designItem = createItem(Material.BLACK_STAINED_GLASS_PANE).withName(Component.empty()).build();
         GuiItem<Object> guiItem = new GuiItemBuilder<>(filler, designItem).build();
         for (int i = 0; i < 6; i++) {
@@ -55,20 +54,12 @@ public class MobEditMenu {
     }
 
     public void open(Player player) {
-        MapGuiFiller filler = new MapGuiFiller(
-                "         ",
-                "         ",
-                "         ",
-                "         ",
-                "         ",
-                "         "
-        );
-
-        GuiMeta<MapGuiFiller> meta = new GuiMeta<>(filler, Component.text("Edit Mob: " + mob.getId()), InventoryType.CHEST_6);
-        cz.miniomega.mobs.gui.Gui<MapGuiFiller> gui = new cz.miniomega.mobs.gui.Gui<>(meta);
+        SlotGuiFiller filler = new SlotGuiFiller();
+        GuiMeta<SlotGuiFiller> meta = new GuiMeta<>(filler, Component.text("Edit Mob: " + mob.getId()), InventoryType.CHEST_6);
+        cz.miniomega.mobs.gui.Gui<SlotGuiFiller> gui = new cz.miniomega.mobs.gui.Gui<>(meta);
         filler = gui.getFiller();
 
-        applySides(filler, 53); // Delete button at 53
+        applySides(filler, 53);
 
         // Slot 13: Bone Meal (Hologram Editor)
         List<Component> holoLore = new ArrayList<>();
@@ -219,16 +210,9 @@ public class MobEditMenu {
     }
 
     private void openParticlesPage1(Player player) {
-        MapGuiFiller filler = new MapGuiFiller(
-                "         ",
-                "         ",
-                "         ",
-                "         ",
-                "         ",
-                "         "
-        );
-        GuiMeta<MapGuiFiller> meta = new GuiMeta<>(filler, Component.text("Effects Page 1: " + mob.getId()), InventoryType.CHEST_6);
-        cz.miniomega.mobs.gui.Gui<MapGuiFiller> gui = new cz.miniomega.mobs.gui.Gui<>(meta);
+        SlotGuiFiller filler = new SlotGuiFiller();
+        GuiMeta<SlotGuiFiller> meta = new GuiMeta<>(filler, Component.text("Effects Page 1: " + mob.getId()), InventoryType.CHEST_6);
+        cz.miniomega.mobs.gui.Gui<SlotGuiFiller> gui = new cz.miniomega.mobs.gui.Gui<>(meta);
         filler = gui.getFiller();
 
         applySides(filler, -1);
@@ -328,16 +312,9 @@ public class MobEditMenu {
     }
 
     private void openParticlesPage2(Player player) {
-        MapGuiFiller filler = new MapGuiFiller(
-                "         ",
-                "         ",
-                "         ",
-                "         ",
-                "         ",
-                "         "
-        );
-        GuiMeta<MapGuiFiller> meta = new GuiMeta<>(filler, Component.text("Effects Page 2: " + mob.getId()), InventoryType.CHEST_6);
-        cz.miniomega.mobs.gui.Gui<MapGuiFiller> gui = new cz.miniomega.mobs.gui.Gui<>(meta);
+        SlotGuiFiller filler = new SlotGuiFiller();
+        GuiMeta<SlotGuiFiller> meta = new GuiMeta<>(filler, Component.text("Effects Page 2: " + mob.getId()), InventoryType.CHEST_6);
+        cz.miniomega.mobs.gui.Gui<SlotGuiFiller> gui = new cz.miniomega.mobs.gui.Gui<>(meta);
         filler = gui.getFiller();
 
         applySides(filler, -1);

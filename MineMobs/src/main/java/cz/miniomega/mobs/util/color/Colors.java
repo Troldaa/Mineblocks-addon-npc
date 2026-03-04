@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 public class Colors {
 
 	public static String colorize(String string) {
+		if (string == null) return null;
+		// Handle legacy <c2> if it somehow appears, but Iridium usually handles it
 		return IridiumColorAPI.process(string);
 	}
 
