@@ -48,16 +48,17 @@ public class MineMobsPlugin extends JavaPlugin {
     }
 
     public void reload() {
-        reloadConfig();
         if (mobRegistry != null) {
             mobRegistry.getMobs().forEach(MineMob::remove);
         }
         if (integrationManager != null) integrationManager.disable();
 
+        reloadConfig();
         integrationManager = new IntegrationManager(this);
         mobRegistry = new MobRegistry();
         mobConfig = new MobConfig(this);
         mobConfig.loadMobs();
+        getLogger().info("MineMobs reloaded successfully!");
     }
 
     public void saveConfiguration() {

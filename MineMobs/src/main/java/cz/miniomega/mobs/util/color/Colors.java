@@ -9,7 +9,14 @@ public class Colors {
 
 	public static String colorize(String string) {
 		if (string == null) return null;
-		// Handle legacy <c2> if it somehow appears, but Iridium usually handles it
+		// Robustly handle ACF and legacy tags
+		string = string.replace("<c1>", "&f")
+                       .replace("<c2>", "&b")
+                       .replace("<c3>", "&7")
+                       .replace("<c4>", "&c")
+                       .replace("<c5>", "&a")
+                       .replace("{link}", "")
+                       .replace("{/link}", "");
 		return IridiumColorAPI.process(string);
 	}
 
