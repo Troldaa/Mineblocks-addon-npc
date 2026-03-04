@@ -3,3 +3,11 @@ version: 1.0.0
 main: cz.miniomega.mobs.MineMobsPlugin
 author: MiniOmega
 api-version: '1.21'
+dependencies:
+  server:
+    DecentHolograms:
+      load: BEFORE
+      required: false
+    PlaceholderAPI:
+      load: BEFORE
+      required: false

@@ -11,6 +11,11 @@ public class DHIntegration implements Integration, HologramProvider {
     public static final String PLUGIN_NAME = "DecentHolograms";
 
     public DHIntegration(MineMobsPlugin plugin) {
+        try {
+            Class.forName("eu.decentsoftware.holograms.api.DHAPI");
+        } catch (ClassNotFoundException e) {
+            throw new IllegalStateException("DecentHolograms API (DHAPI) not found. Is your DecentHolograms version at least 2.0.12?");
+        }
     }
 
     @Override
