@@ -1,10 +1,5 @@
 name: MineMobs
 version: 1.0.0
-main: cz.raixo.mobs.MineMobsPlugin
-author: RAIXOCZ
+main: cz.miniomega.mobs.MineMobsPlugin
+author: MiniOmega
 api-version: '1.21'
-dependencies:
-  server:
-    MineBlocks:
-      load: BEFORE
-      required: true

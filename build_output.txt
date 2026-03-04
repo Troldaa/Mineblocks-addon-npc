@@ -1,0 +1,23 @@
+> Task :clean
+> Task :MineBlocks:clean UP-TO-DATE
+
+> Task :compileJava
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :generateBukkitPluginDescription
+> Task :processResources
+> Task :classes
+> Task :shadowJar
+
+> Task :MineBlocks:compileJava
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :MineBlocks:generateBukkitPluginDescription
+> Task :MineBlocks:processResources
+> Task :MineBlocks:classes
+> Task :MineBlocks:shadowJar
+
+BUILD SUCCESSFUL in 10s
+10 actionable tasks: 9 executed, 1 up-to-date
