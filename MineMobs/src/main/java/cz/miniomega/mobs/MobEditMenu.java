@@ -243,8 +243,8 @@ public class MobEditMenu {
 
         applySides(filler, -1);
 
-        // Group 1: Chicken (Slots 13, 22)
-        filler.setItem(13, new GuiItemBuilder<>(filler, (Renderer<Boolean>) (slot, state) -> createItem(Material.FEATHER)
+        // Chicken
+        filler.setItem(20, new GuiItemBuilder<>(filler, (Renderer<Boolean>) (slot, state) -> createItem(Material.FEATHER)
                 .withName(parse("&#205295&lChicken Cannon"))
                 .withLore(List.of(Component.empty(), parse("&7Status: " + (state ? "&2ON" : "&4OFF"))))
                 .build())
@@ -252,7 +252,7 @@ public class MobEditMenu {
                 .withClickHandler(e -> { mob.setChickenLauncherEffect(!mob.isChickenLauncherEffect()); e.getGuiItem().setState(mob.isChickenLauncherEffect()); plugin.getMobConfig().saveMobs(); })
                 .build());
 
-        filler.setItem(22, new GuiItemBuilder<>(filler, createItem(Material.EGG)
+        filler.setItem(29, new GuiItemBuilder<>(filler, createItem(Material.EGG)
                 .withName(parse("&#205295&lChicken Power"))
                 .withLore(List.of(Component.empty(), parse("&7Current: &#2C74B3" + mob.getChickenLauncherRange()), Component.empty(), parse("&7Click to edit")))
                 .build())
@@ -264,8 +264,8 @@ public class MobEditMenu {
                     }));
                 }).build());
 
-        // Group 2: Firework (Slots 14, 23)
-        filler.setItem(14, new GuiItemBuilder<>(filler, (Renderer<Boolean>) (slot, state) -> createItem(Material.FIREWORK_ROCKET)
+        // Firework
+        filler.setItem(22, new GuiItemBuilder<>(filler, (Renderer<Boolean>) (slot, state) -> createItem(Material.FIREWORK_ROCKET)
                 .withName(parse("&#205295&lFirework Effect"))
                 .withLore(List.of(Component.empty(), parse("&7Status: " + (state ? "&2ON" : "&4OFF"))))
                 .build())
@@ -276,7 +276,7 @@ public class MobEditMenu {
                     plugin.getMobConfig().saveMobs();
                 }).build());
 
-        filler.setItem(23, new GuiItemBuilder<>(filler, createItem(Material.FIREWORK_STAR)
+        filler.setItem(31, new GuiItemBuilder<>(filler, createItem(Material.FIREWORK_STAR)
                 .withName(parse("&#205295&lFirework Height"))
                 .withLore(List.of(Component.empty(), parse("&7Current: &#2C74B3" + mob.getFireworkHeight()), Component.empty(), parse("&7Click to edit")))
                 .build())
@@ -288,8 +288,8 @@ public class MobEditMenu {
                     }));
                 }).build());
 
-        // Group 3: Launch (Slots 15, 24, 33)
-        filler.setItem(15, new GuiItemBuilder<>(filler, (Renderer<Boolean>) (slot, state) -> createItem(Material.FISHING_ROD)
+        // Launch
+        filler.setItem(24, new GuiItemBuilder<>(filler, (Renderer<Boolean>) (slot, state) -> createItem(Material.FISHING_ROD)
                 .withName(parse("&#205295&lLaunch Mode"))
                 .withLore(List.of(Component.empty(), parse("&7Status: " + (state ? "&2ON" : "&4OFF"))))
                 .build())
@@ -297,7 +297,7 @@ public class MobEditMenu {
                 .withClickHandler(e -> { mob.setLaunchMode(!mob.isLaunchMode()); e.getGuiItem().setState(mob.isLaunchMode()); plugin.getMobConfig().saveMobs(); })
                 .build());
 
-        filler.setItem(24, new GuiItemBuilder<>(filler, createItem(Material.SLIME_BALL)
+        filler.setItem(33, new GuiItemBuilder<>(filler, createItem(Material.SLIME_BALL)
                 .withName(parse("&#205295&lLaunch Chance"))
                 .withLore(List.of(Component.empty(), parse("&7Current: &#2C74B3" + mob.getLaunchChance() + "%"), Component.empty(), parse("&7Click to edit")))
                 .build())
@@ -305,18 +305,6 @@ public class MobEditMenu {
                     player.closeInventory(); Colors.send(player, "&bEnter chance (0-100):");
                     plugin.getEditValuesListener().awaitChatInput(player).thenAccept(s -> cz.miniomega.mobs.gui.Gui.runSync(() -> {
                         if (s != null) NumberUtil.parseInt(s).ifPresent(i -> { mob.setLaunchChance(i); plugin.getMobConfig().saveMobs(); });
-                        openParticlesPage1(player);
-                    }));
-                }).build());
-
-        filler.setItem(33, new GuiItemBuilder<>(filler, createItem(Material.TURTLE_HELMET)
-                .withName(parse("&#205295&lLaunch Range"))
-                .withLore(List.of(Component.empty(), parse("&7Current: &#2C74B3" + mob.getLaunchRange()), Component.empty(), parse("&7Click to edit")))
-                .build())
-                .withClickHandler(e -> {
-                    player.closeInventory(); Colors.send(player, "&bEnter range:");
-                    plugin.getEditValuesListener().awaitChatInput(player).thenAccept(s -> cz.miniomega.mobs.gui.Gui.runSync(() -> {
-                        if (s != null) try { mob.setLaunchRange(Double.parseDouble(s)); plugin.getMobConfig().saveMobs(); } catch (Exception ignored) {}
                         openParticlesPage1(player);
                     }));
                 }).build());
@@ -337,8 +325,8 @@ public class MobEditMenu {
 
         applySides(filler, -1);
 
-        // Group: TNT (Slots 13, 22)
-        filler.setItem(13, new GuiItemBuilder<>(filler, (Renderer<Boolean>) (slot, state) -> createItem(Material.TNT)
+        // Group: TNT
+        filler.setItem(22, new GuiItemBuilder<>(filler, (Renderer<Boolean>) (slot, state) -> createItem(Material.TNT)
                 .withName(parse("&#205295&lTNT Cannon"))
                 .withLore(List.of(Component.empty(), parse("&7Status: " + (state ? "&2ON" : "&4OFF"))))
                 .build())
@@ -346,7 +334,7 @@ public class MobEditMenu {
                 .withClickHandler(e -> { mob.setTntCannonEffect(!mob.isTntCannonEffect()); e.getGuiItem().setState(mob.isTntCannonEffect()); plugin.getMobConfig().saveMobs(); })
                 .build());
 
-        filler.setItem(22, new GuiItemBuilder<>(filler, createItem(Material.TNT_MINECART)
+        filler.setItem(31, new GuiItemBuilder<>(filler, createItem(Material.TNT_MINECART)
                 .withName(parse("&#205295&lTNT Count"))
                 .withLore(List.of(Component.empty(), parse("&7Current: &#2C74B3" + mob.getTntCannonCount()), Component.empty(), parse("&7Click to edit")))
                 .build())

@@ -18,6 +18,7 @@ import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.Team;
 import org.bukkit.util.Vector;
 
+import java.lang.reflect.Method;
 import java.util.*;
 
 @Getter
@@ -44,13 +45,13 @@ public class MineMob {
     public int regenerationIdleSeconds = 5;
     public long lastHitTime = 0;
 
-    public int glowMode = 2; // 0: None, 1: White, 2: Red
-    public boolean fireworkEffect = true;
+    public int glowMode = 0; // 0: None, 1: White, 2: Red
+    public boolean fireworkEffect = false;
     public boolean launchMode = false;
     public int launchChance = 100;
     public double launchRange = 5.0;
     public int fireworkHeight = 5;
-    public boolean tntCannonEffect = true;
+    public boolean tntCannonEffect = false;
     public int tntCannonCount = 8;
     public boolean chickenLauncherEffect = false;
     public double chickenLauncherRange = 1.2;
@@ -61,38 +62,41 @@ public class MineMob {
     public BukkitTask ticker;
 
     public void spawn() {
-        if (id == null) return;
+        if (id == null || location == null || type == null) return;
         Entity old = spawnedEntity;
         if (spawnedEntity != null) {
             spawnedEntity.remove();
         }
         spawnedEntity = location.getWorld().spawnEntity(location, type);
-        plugin.mobRegistry.updateEntityMap(this, old, spawnedEntity);
+        spawnedEntity.addScoreboardTag("minemob");
+        spawnedEntity.addScoreboardTag("minemob_" + id);
+
+        plugin.getMobRegistry().updateEntityMap(this, old, spawnedEntity);
         if (spawnedEntity instanceof LivingEntity) {
             LivingEntity living = (LivingEntity) spawnedEntity;
             living.setAI(false);
             living.setRemoveWhenFarAway(false);
             living.setPersistent(true);
 
-            Attribute scale = null;
+            Attribute scaleAttrRef = null;
             try {
-                scale = (Attribute) Attribute.class.getField("GENERIC_SCALE").get(null);
+                scaleAttrRef = (Attribute) Attribute.class.getField("GENERIC_SCALE").get(null);
             } catch (Exception e) {
                 try {
-                    scale = (Attribute) Attribute.class.getField("SCALE").get(null);
+                    scaleAttrRef = (Attribute) Attribute.class.getField("SCALE").get(null);
                 } catch (Exception ignored) {
                     try {
-                        scale = Attribute.valueOf("GENERIC_SCALE");
+                        scaleAttrRef = Attribute.valueOf("GENERIC_SCALE");
                     } catch (Exception ignored2) {
                         try {
-                            scale = Attribute.valueOf("SCALE");
+                            scaleAttrRef = Attribute.valueOf("SCALE");
                         } catch (Exception ignored3) {}
                     }
                 }
             }
 
-            if (scale != null) {
-                AttributeInstance scaleAttr = living.getAttribute(scale);
+            if (scaleAttrRef != null) {
+                AttributeInstance scaleAttr = living.getAttribute(scaleAttrRef);
                 if (scaleAttr != null) {
                     scaleAttr.setBaseValue(mobScale);
                 }
@@ -158,6 +162,18 @@ public class MineMob {
         health.decrement();
         lastHitTime = System.currentTimeMillis();
         player.playSound(location, hitSound, 1.0f, 1.0f);
+
+        // Play red hurt animation
+        if (spawnedEntity instanceof LivingEntity) {
+            LivingEntity living = (LivingEntity) spawnedEntity;
+            try {
+                Method playHurt = living.getClass().getMethod("playHurtAnimation", float.class);
+                playHurt.invoke(living, 0f);
+            } catch (Exception e) {
+                // Fallback for older versions
+                living.damage(0.001);
+            }
+        }
 
         List<Runnable> runnables = new LinkedList<>();
         PlayerData playerData = playerDataMap.computeIfAbsent(player.getUniqueId(), uuid -> new PlayerData(uuid, player.getName()));
@@ -306,19 +322,19 @@ public class MineMob {
         if (message == null || message.isEmpty()) return;
         String coloredMessage = Colors.colorize(message.replace("%player%", attacker.getName()));
         for (Player p : plugin.getServer().getOnlinePlayers()) {
-            p.sendMessage(plugin.integrationManager.setPlaceholders(p, coloredMessage));
+            p.sendMessage(plugin.getIntegrationManager().setPlaceholders(p, coloredMessage));
         }
     }
 
     public void createHologram() {
         removeHologram();
         if (hologramLines.isEmpty()) return;
-        if (plugin.integrationManager.getHologramProvider() == null) return;
+        if (plugin.getIntegrationManager().getHologramProvider() == null) return;
         double height = 2.0;
         if (spawnedEntity != null) {
             height = spawnedEntity.getHeight() + 0.5;
         }
-        hologram = plugin.integrationManager.getHologramProvider().provide("minemob_" + id, location.clone().add(0, height, 0));
+        hologram = plugin.getIntegrationManager().getHologramProvider().provide("minemob_" + id, location.clone().add(0, height, 0));
         updateHologram();
     }
 
@@ -367,6 +383,14 @@ public class MineMob {
             line = line.replace("%cooldown%", formatTime(remainingCooldown));
         } else {
             line = line.replace("%cooldown%", "");
+        }
+
+        // Regeneration placeholder
+        if (!isCoolingDown && health != null && health.health < health.maxHealth) {
+            long remaining = (long)regenerationIdleSeconds - (System.currentTimeMillis() - lastHitTime) / 1000L;
+            line = line.replace("%regen%", remaining > 0 ? String.valueOf(remaining) : "0");
+        } else {
+            line = line.replace("%regen%", "");
         }
 
         List<PlayerData> players = top.getPlayers();
