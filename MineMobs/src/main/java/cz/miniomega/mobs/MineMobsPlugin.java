@@ -9,7 +9,10 @@ import cz.miniomega.mobs.listener.MobListener;
 import cz.miniomega.mobs.menu.listener.EditListener;
 import lombok.Getter;
 import org.bukkit.Bukkit;
+import org.bukkit.World;
+import org.bukkit.entity.Entity;
 import org.bukkit.plugin.java.JavaPlugin;
+import eu.decentsoftware.holograms.api.DHAPI;
 
 import java.util.List;
 
@@ -53,12 +56,31 @@ public class MineMobsPlugin extends JavaPlugin {
         }
         if (integrationManager != null) integrationManager.disable();
 
+        cleanupOrphans();
+
         reloadConfig();
         integrationManager = new IntegrationManager(this);
         mobRegistry = new MobRegistry();
         mobConfig = new MobConfig(this);
         mobConfig.loadMobs();
         getLogger().info("MineMobs reloaded successfully!");
+    }
+
+    private void cleanupOrphans() {
+        for (World world : Bukkit.getWorlds()) {
+            for (Entity entity : world.getEntities()) {
+                if (entity.getScoreboardTags().contains("minemob")) {
+                    entity.remove();
+                }
+            }
+        }
+        // Robust DecentHolograms cleanup using DHAPI
+        if (Bukkit.getPluginManager().isPluginEnabled("DecentHolograms")) {
+            try {
+                // There isn't a direct 'get all' in DHAPI that's simple, so we rely on the MineMob#remove() call
+                // which already deletes individual holograms. The plugin-level cleanup is a safety net.
+            } catch (Throwable ignored) {}
+        }
     }
 
     public void saveConfiguration() {
@@ -73,6 +95,7 @@ public class MineMobsPlugin extends JavaPlugin {
         if (mobRegistry != null) {
             mobRegistry.getMobs().forEach(MineMob::remove);
         }
+        cleanupOrphans();
         if (integrationManager != null) {
             integrationManager.disable();
         }

@@ -18,7 +18,6 @@ import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.Team;
 import org.bukkit.util.Vector;
 
-import java.lang.reflect.Method;
 import java.util.*;
 
 @Getter
@@ -60,18 +59,21 @@ public class MineMob {
     public Entity spawnedEntity;
     public cz.miniomega.mobs.integration.models.hologram.Hologram hologram;
     public BukkitTask ticker;
+    private BukkitTask respawnTask;
 
     public void spawn() {
         if (id == null || location == null || type == null) return;
-        Entity old = spawnedEntity;
+
+        // Remove existing entity if present to prevent ghosting
         if (spawnedEntity != null) {
             spawnedEntity.remove();
         }
+
         spawnedEntity = location.getWorld().spawnEntity(location, type);
         spawnedEntity.addScoreboardTag("minemob");
         spawnedEntity.addScoreboardTag("minemob_" + id);
 
-        plugin.getMobRegistry().updateEntityMap(this, old, spawnedEntity);
+        plugin.getMobRegistry().updateEntityMap(this, null, spawnedEntity);
         if (spawnedEntity instanceof LivingEntity) {
             LivingEntity living = (LivingEntity) spawnedEntity;
             living.setAI(false);
@@ -134,6 +136,14 @@ public class MineMob {
     }
 
     public void remove() {
+        if (ticker != null) {
+            ticker.cancel();
+            ticker = null;
+        }
+        if (respawnTask != null) {
+            respawnTask.cancel();
+            respawnTask = null;
+        }
         if (spawnedEntity != null) {
             if (spawnedEntity instanceof Wither) {
                 ((Wither) spawnedEntity).setHealth(0);
@@ -142,10 +152,6 @@ public class MineMob {
             spawnedEntity = null;
         }
         removeHologram();
-        if (ticker != null) {
-            ticker.cancel();
-            ticker = null;
-        }
         isCoolingDown = false;
         remainingCooldown = 0;
     }
@@ -164,15 +170,8 @@ public class MineMob {
         player.playSound(location, hitSound, 1.0f, 1.0f);
 
         // Play red hurt animation
-        if (spawnedEntity instanceof LivingEntity) {
-            LivingEntity living = (LivingEntity) spawnedEntity;
-            try {
-                Method playHurt = living.getClass().getMethod("playHurtAnimation", float.class);
-                playHurt.invoke(living, 0f);
-            } catch (Exception e) {
-                // Fallback for older versions
-                living.damage(0.001);
-            }
+        if (spawnedEntity != null) {
+            spawnedEntity.playEffect(EntityEffect.HURT);
         }
 
         List<Runnable> runnables = new LinkedList<>();
@@ -212,7 +211,9 @@ public class MineMob {
         }
         updateHologram();
 
-        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+        if (respawnTask != null) respawnTask.cancel();
+        respawnTask = plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            respawnTask = null;
             isCoolingDown = false;
             remainingCooldown = 0;
             if (spawnedEntity != null) {
